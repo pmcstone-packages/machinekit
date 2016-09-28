@@ -70,6 +70,7 @@ typedef struct {
     hal_bit_t *home_sw;		/* RPI: home switch input */
     hal_bit_t *index_enable;	/* RPIO: motmod sets: request reset on index
 				         encoder clears: index arrived */
+    hal_float_t *home_index_offset; /* RPO: distance fm. home switch to index */
     hal_bit_t *amp_fault;	/* RPI: amp fault input */
     hal_bit_t *amp_enable;	/* WPI: amp enable output */
     hal_s32_t *home_state;	/* WPI: homing state machine state */

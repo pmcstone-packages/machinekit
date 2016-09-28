@@ -2107,6 +2107,7 @@ static void output_to_hal(void)
 	*(joint_data->index_enable) = joint->index_enable;
 	*(joint_data->homing) = GET_JOINT_HOMING_FLAG(joint);
 	*(joint_data->home_state) = joint->home_state;
+	*(joint_data->home_index_offset) = joint->home_index_offset;
 
 	*(joint_data->coarse_pos_cmd) = joint->coarse_pos;
 	*(joint_data->joint_vel_cmd) = joint->vel_cmd;

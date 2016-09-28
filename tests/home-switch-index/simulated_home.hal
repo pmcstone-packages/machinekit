@@ -1,0 +1,109 @@
+# Intermac axes roll onto then reverse off of a home switch then home
+# to index.  X axis starts by moving in the negative direction; Y, Z
+# in the positive.
+
+# Each axis has two comparators with X, Y and Z joint position
+# feedback on one input and a set position on the other.  The `sw_*`
+# comparators emulate a home switch with given location, .02
+# in. hysteresis.  The `ix_*` comparator sends an index pulse when
+# within +/-0.01 in. of its set location.
+
+# loadrt comp names=sw_x,sw_y,sw_z,ix_x,ix_y,ix_z
+loadrt sim_home_switch names=hs_x,hs_y,hs_z
+
+######## Home switch position and hysteresis settings ########
+net Xhomeswpos => hs_x.home-pos
+net Yhomeswpos => hs_y.home-pos
+net Zhomeswpos => hs_z.home-pos
+#
+sets Xhomeswpos -1.0
+sets Yhomeswpos 0.5
+sets Zhomeswpos 2.0
+#
+net Xhysteresis => hs_x.hysteresis
+net Yhysteresis => hs_y.hysteresis
+net Zhysteresis => hs_z.hysteresis
+#
+sets Xhysteresis .02
+sets Yhysteresis .02
+sets Zhysteresis .02
+
+######## Index pulse position and width settings ########
+net Xixpos => hs_x.index-pos
+net Yixpos => hs_y.index-pos
+net Zixpos => hs_z.index-pos
+#
+sets Xixpos -0.9
+sets Yixpos 0.3
+sets Zixpos 1.7
+#
+net Xixwidth => hs_x.index-width
+net Yixwidth => hs_y.index-width
+net Zixwidth => hs_z.index-width
+#
+sets Xixwidth .02
+sets Yixwidth .02
+sets Zixwidth .02
+
+######## Plumbing ########
+#
+# Plumb current position in
+net Xpos => hs_x.cur-pos
+net Ypos => hs_y.cur-pos
+net Zpos => hs_z.cur-pos
+#
+# Plumb home switch out
+net Xhomesw <= hs_x.home-sw => axis.0.home-sw-in
+net Yhomesw <= hs_y.home-sw => axis.1.home-sw-in
+net Zhomesw <= hs_z.home-sw => axis.2.home-sw-in
+#
+# Plumb index pulse out
+net Xix => axis.0.index-enable <=> hs_x.index-enable
+net Yix => axis.1.index-enable <=> hs_y.index-enable
+net Zix => axis.2.index-enable <=> hs_z.index-enable
+#
+# Add home switches to servo thread
+addf hs_x servo-thread
+addf hs_y servo-thread
+addf hs_z servo-thread
+
+
+######## Sampler ########
+#
+# Sample Npos, Nhomesw, Nix, Nhomestate, Nhomed and
+# axis.N.home-index-offset for N in X, Y, Z
+#
+# This isn't needed by the test, but it's useful for debugging
+loadrt sampler depth=100,100,100 cfg=fbbsbf,fbbsbf,fbbsbf
+
+net Xpos => sampler.0.pin.0
+net Ypos => sampler.1.pin.0
+net Zpos => sampler.2.pin.0
+
+net Xhomesw => sampler.0.pin.1
+net Yhomesw => sampler.1.pin.1
+net Zhomesw => sampler.2.pin.1
+
+net Xix => sampler.0.pin.2
+net Yix => sampler.1.pin.2
+net Zix => sampler.2.pin.2
+
+net Xhomestate axis.0.home-state => sampler.0.pin.3
+net Yhomestate axis.1.home-state => sampler.1.pin.3
+net Zhomestate axis.2.home-state => sampler.2.pin.3
+
+net Xhomed axis.0.homed => sampler.0.pin.4
+net Yhomed axis.1.homed => sampler.1.pin.4
+net Zhomed axis.2.homed => sampler.2.pin.4
+
+net Xixoffset axis.0.home-index-offset => sampler.0.pin.5
+net Yixoffset axis.1.home-index-offset => sampler.1.pin.5
+net Zixoffset axis.2.home-index-offset => sampler.2.pin.5
+
+addf sampler.0 servo-thread
+addf sampler.1 servo-thread
+addf sampler.2 servo-thread
+
+loadusr halsampler -c 0 -t samples.0.txt
+loadusr halsampler -c 1 -t samples.1.txt
+loadusr halsampler -c 2 -t samples.2.txt
