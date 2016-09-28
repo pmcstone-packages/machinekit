@@ -650,6 +650,8 @@ void do_homing(void)
 		   next index pulse arrives. */
 		/* set the index enable */
 		joint->index_enable = 1;
+		/* temporarily record the home switch position */
+		joint->home_index_offset = joint->motor_pos_fb;
 		/* and move right into the waiting state */
 		joint->home_state = HOME_INDEX_SEARCH_WAIT;
 		immediate_state = 1;
@@ -687,6 +689,8 @@ void do_homing(void)
 		    (joint->backlash_filt + joint->motor_offset);
 		joint->pos_cmd = joint->pos_fb;
 		joint->free_pos_cmd = joint->pos_fb;
+		/* finalize the home index offset calculation */
+		joint->home_index_offset -= joint->motor_pos_fb;
 		/* next state */
 		joint->home_state = HOME_FINAL_MOVE_START;
 		immediate_state = 1;

@@ -503,6 +503,7 @@ Suggestion: Split this in to an Error and a Status flag register..
 	double backlash;	/* amount of backlash */
 	int home_sequence;      /* Order in homing sequence */
 	emcmot_comp_t comp;	/* leadscrew correction data */
+	double home_index_offset; /* Distance fm. home switch to index */
 
 	/* status info - changes regularly */
 	/* many of these need to be made available to higher levels */
