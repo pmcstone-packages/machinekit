@@ -1,0 +1,12 @@
+axis X:
+    switch pos=-1.00, hyst=0.02 => home pos=-0.98
+    index pos=-0.90, wid=0.02 => index pos = -0.91
+    home index offset:  calculated = -0.07; actual = -0.07
+axis Y:
+    switch pos=0.50, hyst=0.02 => home pos=0.48
+    index pos=0.30, wid=0.02 => index pos = 0.31
+    home index offset:  calculated = 0.17; actual = 0.17
+axis Z:
+    switch pos=2.00, hyst=0.02 => home pos=1.98
+    index pos=1.70, wid=0.02 => index pos = 1.71
+    home index offset:  calculated = 0.27; actual = 0.27

@@ -1,0 +1,24 @@
+######## test-ui component ########
+net Xhomed => test-ui.Xhomed
+net Yhomed => test-ui.Yhomed
+net Zhomed => test-ui.Zhomed
+
+net Xhomeswpos => test-ui.Xhomeswpos
+net Yhomeswpos => test-ui.Yhomeswpos
+net Zhomeswpos => test-ui.Zhomeswpos
+
+net Xhysteresis => test-ui.Xhysteresis
+net Yhysteresis => test-ui.Yhysteresis
+net Zhysteresis => test-ui.Zhysteresis
+
+net Xixpos => test-ui.Xixpos
+net Yixpos => test-ui.Yixpos
+net Zixpos => test-ui.Zixpos
+
+net Xixoffset => test-ui.Xixoffset
+net Yixoffset => test-ui.Yixoffset
+net Zixoffset => test-ui.Zixoffset
+
+net Xixwidth => test-ui.Xixwidth
+net Yixwidth => test-ui.Yixwidth
+net Zixwidth => test-ui.Zixwidth

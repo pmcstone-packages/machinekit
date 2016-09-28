@@ -8,6 +8,9 @@ pin in float cur_pos "Current position (typically: axis.n.motor-pos-fb)";
 pin in float home_pos = 1 "Home switch position";
 pin in float hysteresis = 0.1"Travel required to backoff (hysteresis)";
 pin out bit  home_sw"Home switch activated";
+pin in float index_pos = 1.1 "Index pulse position";
+pin in float index_width = 0.1 "Index pulse width";
+pin io bit index_enable "Index pulse";
 
 function _ fp;
 license "GPL";
@@ -45,5 +48,13 @@ FUNCTION(_) {
                 }
             }
         }
+    }
+
+    // Index pulse
+    if (cur_pos >= index_pos - 0.5*index_width &&
+	cur_pos <= index_pos + 0.5*index_width &&
+	index_enable) {
+	// Within pulse area and index_enable set; reset index_enable
+	index_enable = 0;
     }
 }

@@ -795,6 +795,11 @@ static int export_joint(int num, joint_hal_t * addr)
     if (retval != 0) {
 	return retval;
     }
+    retval = hal_pin_float_newf(HAL_OUT, &(addr->home_index_offset), mot_comp_id,
+				"axis.%d.home-index-offset", num);
+    if (retval != 0) {
+	return retval;
+    }
     /* export joint parameters */ //FIXME-AJ: changing these to joints will break configs.
     retval =
 	hal_pin_float_newf(HAL_OUT, &(addr->coarse_pos_cmd),
