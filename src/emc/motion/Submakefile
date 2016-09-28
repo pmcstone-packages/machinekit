@@ -4,3 +4,6 @@ INCLUDES += emc/motion
 	cp $^ $@
 ../include/%.hh: ./emc/motion/%.hh
 	cp $^ $@
+
+objects/emc/motion/homing.png: emc/motion/homing.dot
+	dot -Tpng $< > $@
