@@ -1,3 +1,27 @@
+# This Travis CI config calls scripts that use the following defaults,
+# which can (and some should) be overridden in the Travis CI repo
+# settings.
+#
+# Package build `build_docker` script:
+# - IMAGE:  dovetailautomata/mk-cross-builder
+#   Docker image to pull for build
+# - MK_PACKAGE_VERBOSE:  false
+#   Build verbosely with `make V=1`
+# - JOBS:  2
+#   Make parallel jobs, `make -j2`
+# - DEBIAN_SUITE:  experimental
+#   Debian package suite
+# - MAJOR_MINOR_VERSION:  0.1
+#   Override Machinekit package base version
+# - PKGSOURCE:  ${TRAVIS_REPO}
+#   Identifier added to package release suggesting package origin
+#
+# Package upload `build_upload_packagecloud` script:
+# - PACKAGECLOUD_USER, PACKAGECLOUD_TOKEN, PACKAGECLOUD_REPO: no defaults
+#   Packagecloud.io user credentials and package repository
+# - DEPLOY_BRANCH: master
+#   Git branch for which to deploy packages
+
 sudo: required
 
 notifications:
@@ -11,47 +35,45 @@ notifications:
     on_failure: always
     on_start: never
 
-language: bash
+# Cache:  In $HOME/.ccache; inserts /usr/lib/ccache into $PATH
+# https://docs.travis-ci.com/user/caching/#ccache-cache
+language: c
+cache: ccache
 
 services:
   - docker
 
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq sshpass
-  - gem install package_cloud
-  - .travis/check_sftp.sh 
-
 env:
   global:
-    - ROOT=/opt/rootfs
-    - JOBS=2
-    - SFTP_PORT="${SFTP_PORT:-22}"
-    - SFTP_USER="${SFTP_USER:-travis}"
-    - SFTP_ADDR="${SFTP_ADDR:-empty}"
+    - IMAGE=${IMAGE:-dovetailautomata/mk-cross-builder}
+    - MK_PACKAGE_VERBOSE=${MK_PACKAGE_VERBOSE:-false}
+    - JOBS=${JOBS:-2}
   matrix:
-    - TAG=wheezy-64    CMD=run_tests
-    - TAG=jessie-64    CMD=run_tests
-    - TAG=wheezy-64    CMD=build_deb
-    - TAG=wheezy-32    CMD=build_deb
-    - TAG=wheezy-armhf CMD=build_deb FLAV=posix
-    - TAG=wheezy-armhf CMD=build_deb FLAV=xenomai
-    - TAG=wheezy-armhf CMD=build_deb FLAV=rt_preempt
-    - TAG=jessie-64    CMD=build_deb
-    - TAG=jessie-32    CMD=build_deb
-    - TAG=jessie-armhf CMD=build_deb FLAV=posix
-    - TAG=jessie-armhf CMD=build_deb FLAV=xenomai
-    - TAG=jessie-armhf CMD=build_deb FLAV=rt_preempt
-    - TAG=raspbian-armhf CMD=build_deb FLAV=posix
-    - TAG=raspbian-armhf CMD=build_deb FLAV=xenomai
-    - TAG=raspbian-armhf CMD=build_deb FLAV=rt_preempt
+    - TAG=amd64    CMD=test
+    - TAG=amd64    CMD=deb
+    - TAG=i386     CMD=deb
+    - TAG=armhf    CMD=deb
+    - TAG=raspbian CMD=deb
+
+addons:
+  apt:
+    packages:
+    - lftp
+    - sshpass
+
+before_install:
+  # Pull the Docker build image
+  - docker pull "${IMAGE}:${TAG}"
+  # Clear ccache stats
+  - ccache -z
+  # Install the packagecloud gem for pushing packages
+  - gem install package_cloud
 
 script:
-  - .travis/docker_run.sh
+  - scripts/build_docker -i $IMAGE -t $TAG -c $CMD
 
 after_success:
-  - .travis/send_binaries.sh
-  - test ${TAG} != "raspbian-armhf" && .travis/upload_packagecloud.sh
-
-after_script:
-  - .travis/send_status.sh
+  # Upload packages to packagecloud.io
+  - scripts/build_upload_packagecloud
+  # Show ccache stats
+  - ccache -s
