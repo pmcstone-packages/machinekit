@@ -6,20 +6,13 @@
 # indicate who built the package, how, and from what revision).
 
 
-# Whether to actually build the source
-BUILD_SOURCE=$1
-if test "$1" != "true" -a "$1" != "false"; then
-    echo "Usage:  $0 [ true | false ]" >&2
-    exit 1
-fi
-
 # Computed variables
 SOURCE_DIR=$(readlink -f $(dirname ${0})/..)
 test ${TRAVIS_PULL_REQUEST:-false} = false && IS_PR=false || IS_PR=true
 
 case $TAG in
-    *_8) DISTRO=jessie ;;
-    *_9) DISTRO=stretch ;;
+    amd64|i386|armhf) DISTRO=jessie ;;
+    raspbian) DISTRO=raspbian ;;
 esac
 
 COMMIT_TIMESTAMP="$(git log -1 --pretty=format:%at)"
@@ -56,8 +49,7 @@ UPSTREAM_ID=${PKGSOURCE//[-_]/}.${PR_OR_BRANCH//[-_]/}
 VERSION="${MAJOR_MINOR_VERSION}.${TIMESTAMP}.git${SHA1SHORT}"
 
 # Final release
-#RELEASE="1${UPSTREAM_ID}~1${DISTRO}"
-RELEASE="1~${DISTRO}"
+RELEASE="1${UPSTREAM_ID}~1${DISTRO}"
 
 ###########################################################
 # Debug output
@@ -83,33 +75,31 @@ echo "RELEASE=$RELEASE"
 # Generate debian/changelog entry
 #
 # https://www.debian.org/doc/debian-policy/ch-source.html#s-dpkgchangelog
-# 
+
 cd ${SOURCE_DIR}
 
-rm -f debian/changelog
-
+mv debian/changelog debian/changelog.orig
 cat > debian/changelog <<EOF
 machinekit (${VERSION}-${RELEASE}) ${DEBIAN_SUITE}; urgency=low
+
   * Travis CI rebuild
     - TAG ${TAG}
     - PR/branch ${PR_OR_BRANCH}
     - Commit ${SHA1SHORT}
     - ${COMMIT_URL}
+
  -- ${COMMITTER_NAME} <${COMMITTER_EMAIL}>  $(date -R)
 
 EOF
-
 echo "New changelog entry:"
 cat debian/changelog # debug output
-cat debian/changelog.in >> debian/changelog
+cat debian/changelog.orig >> debian/changelog
 
-if $BUILD_SOURCE; then
-    set -x # Let user see what's going on
+set -x # Let user see
 
-    # create .orig tarball
-    git archive HEAD | \
-	bzip2 -z | dd of=../machinekit_${VERSION}.orig.tar.bz2
+# create .orig tarball
+git archive HEAD | \
+    bzip2 -z | tee ../machinekit_${VERSION}.orig.tar.bz2 >/dev/null
 
-    # build source package
-    dpkg-source -b .
-fi
+# build source package
+dpkg-source -b .

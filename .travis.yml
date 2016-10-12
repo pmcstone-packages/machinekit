@@ -15,10 +15,6 @@
 #   Override Machinekit package base version
 # - PKGSOURCE:  ${TRAVIS_REPO}
 #   Identifier added to package release suggesting package origin
-# - TEST_ARGS:  (empty)
-#   For CMD=test only; set as needed for debugging, e.g. `-v tests/hm2-idrom`
-# - TEST_DEBUG:  false
-#   For CMD=test only; set to `true` to send test debug output to stderr
 #
 # Package upload `build_upload_packagecloud` script:
 # - PACKAGECLOUD_USER, PACKAGECLOUD_TOKEN, PACKAGECLOUD_REPO: no defaults
@@ -47,30 +43,17 @@ cache: ccache
 services:
   - docker
 
-before_install:
-  - .travis/check_sftp.sh 
-
 env:
   global:
     - IMAGE=${IMAGE:-dovetailautomata/mk-cross-builder}
     - MK_PACKAGE_VERBOSE=${MK_PACKAGE_VERBOSE:-false}
     - JOBS=${JOBS:-2}
-    - TEST_DEBUG=false
-    - TEST_ARGS=
   matrix:
-    # Tests
-    # - Reduce total build time by starting longest jobs first
-    - TAG=amd64_9    CMD=test
-    - TAG=amd64_8    CMD=test
-    # Packages
-    # - Stretch
-    - TAG=amd64_9    CMD=deb
-    - TAG=i386_9     CMD=deb
-    - TAG=armhf_9    CMD=deb
-    # - Jessie
-    - TAG=amd64_8    CMD=deb
-    - TAG=i386_8     CMD=deb
-    - TAG=armhf_8    CMD=deb
+    - TAG=amd64    CMD=test
+    - TAG=amd64    CMD=deb
+    - TAG=i386     CMD=deb
+    - TAG=armhf    CMD=deb
+    - TAG=raspbian CMD=deb
 
 addons:
   apt:
@@ -79,8 +62,6 @@ addons:
     - sshpass
 
 before_install:
-  # Show environment for debugging purposes
-  - env
   # Pull the Docker build image
   - docker pull "${IMAGE}:${TAG}"
   # Clear ccache stats
@@ -92,12 +73,7 @@ script:
   - scripts/build_docker -i $IMAGE -t $TAG -c $CMD
 
 after_success:
-  - .travis/send_binaries.sh
   # Upload packages to packagecloud.io
-  - test -z "PACKAGECLOUD_USER" || gem install package_cloud
-  - test -z "PACKAGECLOUD_USER" || scripts/build_packagecloud_upload
+  - scripts/build_upload_packagecloud
   # Show ccache stats
   - ccache -s
-
-after_script:
-  - .travis/send_status.sh
