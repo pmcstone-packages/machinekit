@@ -44,7 +44,7 @@ test -n "$TAG" || error "TAG not set"
 # Set up
 
 case $TAG in
-    raspbian)  DISTRO=raspbian ;;
+    raspbian)  DISTRO=raspbian; exit_nice "FIXME:  not pushing Raspbian packages" ;;
     amd64|i386|armhf) DISTRO=jessie ;;
     *) error "Unknown tag '$TAG'" ;;
 esac
