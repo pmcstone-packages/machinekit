@@ -6,6 +6,9 @@
 # indicate who built the package, how, and from what revision).
 
 
+# Whether to actually build the source
+BUILD_SOURCE=$1
+
 # Computed variables
 SOURCE_DIR=$(readlink -f $(dirname ${0})/..)
 test ${TRAVIS_PULL_REQUEST:-false} = false && IS_PR=false || IS_PR=true
@@ -95,11 +98,13 @@ echo "New changelog entry:"
 cat debian/changelog # debug output
 cat debian/changelog.orig >> debian/changelog
 
-set -x # Let user see
+if test "$BUILD_SOURCE" = true; then
+    set -x # Let user see
 
-# create .orig tarball
-git archive HEAD | \
-    bzip2 -z | tee ../machinekit_${VERSION}.orig.tar.bz2 >/dev/null
+    # create .orig tarball
+    git archive HEAD | \
+	bzip2 -z | tee ../machinekit_${VERSION}.orig.tar.bz2 >/dev/null
 
-# build source package
-dpkg-source -b .
+    # build source package
+    dpkg-source -b .
+fi
