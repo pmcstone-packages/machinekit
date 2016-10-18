@@ -78,6 +78,6 @@ script:
 after_success:
   # Upload packages to packagecloud.io; on amd64-deb, prune old
   - scripts/build_packagecloud_upload
-  - test "$TAG-$CMD" != "amd64-deb" || scripts/build_packagecloud_prune
+  - test "$TAG-$CMD" != "amd64-deb" || packagecloud-prune -f machinekit
   # Show ccache stats
   - ccache -s
