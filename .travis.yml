@@ -19,6 +19,8 @@
 # Package upload `build_upload_packagecloud` script:
 # - PACKAGECLOUD_USER, PACKAGECLOUD_TOKEN, PACKAGECLOUD_REPO: no defaults
 #   Packagecloud.io user credentials and package repository
+# - PACKAGECLOUD_MAX_OLD_PACKAGES: 0
+#   Leave how many package versions on packagecloud (0 to disable pruning)
 # - DEPLOY_BRANCH: master
 #   Git branch for which to deploy packages
 
@@ -48,6 +50,7 @@ env:
     - IMAGE=${IMAGE:-dovetailautomata/mk-cross-builder}
     - MK_PACKAGE_VERBOSE=${MK_PACKAGE_VERBOSE:-false}
     - JOBS=${JOBS:-2}
+    - PACKAGECLOUD_MAX_OLD_PACKAGES=${PACKAGECLOUD_MAX_OLD_PACKAGES:0}
   matrix:
     - TAG=amd64    CMD=test
     - TAG=amd64    CMD=deb
@@ -73,7 +76,8 @@ script:
   - scripts/build_docker -i $IMAGE -t $TAG -c $CMD
 
 after_success:
-  # Upload packages to packagecloud.io
-  - scripts/build_upload_packagecloud
+  # Upload packages to packagecloud.io; on amd64-deb, prune old
+  - scripts/build_packagecloud_upload
+  - test "$TAG-$CMD" != "amd64-deb" || scripts/build_packagecloud_prune
   # Show ccache stats
   - ccache -s
