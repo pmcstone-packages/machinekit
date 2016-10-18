@@ -102,8 +102,10 @@ case $CMD in
             # configure source package
             debian/configure -prxt 8.6;
 
-            # update Changelog and build source package
-            $SCRIPT_DIR/build_source_package
+            if $BUILD_SOURCE; then
+		# update Changelog and build source package
+		$SCRIPT_DIR/build_source_package
+            fi
 
             # build binary packages
             dpkg-buildpackage -uc -us ${BUILD_OPTS} -j$JOBS
