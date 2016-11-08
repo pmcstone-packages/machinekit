@@ -503,6 +503,7 @@ Suggestion: Split this in to an Error and a Status flag register..
 	double backlash;	/* amount of backlash */
 	int home_sequence;      /* Order in homing sequence */
 	emcmot_comp_t comp;	/* leadscrew correction data */
+	double home_index_offset; /* Distance fm. home switch to index */
 
 	/* status info - changes regularly */
 	/* many of these need to be made available to higher levels */
@@ -534,7 +535,6 @@ Suggestion: Split this in to an Error and a Status flag register..
 
 	int on_pos_limit;	/* non-zero if on limit */
 	int on_neg_limit;	/* non-zero if on limit */
-	double home_sw_pos;	/* latched position of home sw */
 	int home_pause_timer;	/* used to delay between homing states */
 	int index_enable;	/* current state of index enable pin */
 
