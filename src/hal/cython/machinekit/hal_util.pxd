@@ -38,6 +38,15 @@ cdef inline hal2py(int t, hal_data_u *dp):
     else:
         raise RuntimeError("hal2py: invalid type %d" % t)
 
+cdef inline haltype_to_string(int t):
+    if t == HAL_BIT:  return "bit"
+    elif t == HAL_FLOAT: return "float"
+    elif t == HAL_S32:   return "s32"
+    elif t == HAL_U32:   return "u32"
+    elif t == HAL_S64:   return "s64"
+    elif t == HAL_U64:   return "u64"
+    else: return "invalid"
+
 cdef inline py2hal(int t, hal_data_u *dp, object v):
     cdef bint isint,isfloat
 
@@ -64,5 +73,5 @@ cdef inline py2hal(int t, hal_data_u *dp, object v):
         else:
             raise RuntimeError("invalid HAL object type %d" % (t))
     else:
-        raise RuntimeError("py2hal: float value not valid for type: %d" % (t))
+        raise RuntimeError("py2hal: float value not valid for HAL object type: %s" % haltype_to_string(t))
 
