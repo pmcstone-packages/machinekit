@@ -212,6 +212,8 @@ int hm2_pktuart_setup(char *name, int bitrate, s32 tx_mode, s32 rx_mode, int txc
     /* http://freeby.mesanet.com/regmap
       The PktUARTrMode register is used for setting and checking the PktUARTr's 
       operation mode, timing, and status
+      Bit  31..30      Unused
+      Bit  29..22      Filter Register
       Bit  21          FrameBuffer has data 
       Bits 20..16      Frames received
       Bits 15..8       InterFrame delay in bit times
@@ -225,7 +227,9 @@ int hm2_pktuart_setup(char *name, int bitrate, s32 tx_mode, s32 rx_mode, int txc
       Bit  0           False Start bit error (sticky)
     */
     if (rx_mode >= 0) {
-        buff = ((u32)rx_mode) & 0xffff;
+        // read filter settings from rx register before setting new values
+        r += hm2->llio->read(hm2->llio, inst->rx_mode_addr, &buff, sizeof(u32));
+        buff = (((u32)rx_mode) & 0xffff) | (buff & (0xFF << 22));
         r += hm2->llio->write(hm2->llio, inst->rx_mode_addr, &buff, sizeof(u32));
     }
 
