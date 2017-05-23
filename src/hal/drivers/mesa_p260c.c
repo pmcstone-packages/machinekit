@@ -6,9 +6,6 @@
 
 */
 
-//#define NO_SERIAL 1
-#define OPEN_ON_ERROR 1
-
 #include "rtapi.h"		/* RTAPI realtime OS API */
 #include "rtapi_app.h"		/* RTAPI realtime module decls */
 
@@ -457,7 +454,7 @@ static int openserial(char *devicename, int baud)
     u32 tx_inter_frame_delay = 226u; // 226 bit = 76us
     u32 rx_inter_frame_delay = 113u; // 113 bit = 38us
     u32 tx_data = (tx_inter_frame_delay << 8) | DRIVE_ENABLE_AUTO;
-    u32 rx_data = (rx_filter_reg << 22) | (rx_inter_frame_delay << 8) | RX_ENABLE; ; // RX_MASK_ENABLE | 
+    u32 rx_data = (rx_filter_reg << 22) | (rx_inter_frame_delay << 8) | RX_ENABLE | RX_MASK_ENABLE;
 
     rtapi_print_msg(RTAPI_MSG_INFO, "%s: TX inter-frame delay: %u, RX inter-frame delay: %u, RX FilterReg: %u\n",
                     modname, tx_inter_frame_delay, rx_inter_frame_delay, rx_filter_reg);
@@ -471,29 +468,6 @@ static int openserial(char *devicename, int baud)
     return 0;
 }
 
-void write_gpio( int gpio, int on ) {}
-
-static void set_debug( int pin, int val )
-{
-#if 0
-	if ( pin == 0 )
-	{
-		write_gpio( 915, val );
-		if ( debug_fd != 0 )
-		{
-			setDTR( debug_fd, val );
-		}
-	}
-	else
-	{
-		write_gpio( 923, val );
-		if ( debug_fd != 0 )
-		{
-			setRTS( debug_fd, val );
-		}
-	}
-#endif
-}
 /***********************************************************************
 
  Protocol task functions
@@ -611,7 +585,6 @@ static int read_counts( int board )
 	else
 	{
 		ret=1;
-		set_debug( 1, 1 );
 
 		// new error
 		boards[board].count_errors++;
@@ -718,9 +691,7 @@ static void read_all_data()
 	for (i = 0; i < num_boards; i++)
     {
 		valid += read_counts(i);
-	}
-        
-	set_debug( 0, 0 );
+	}        
 }
 
 // get HAL pins and set data
@@ -816,7 +787,6 @@ static void handle_errors( void )
 	if ( err )
 	{
 		*mstat->permanent_error = 1;
-		set_debug( 1, 1 );
 	}
 }
 
@@ -848,17 +818,11 @@ static void serial_port_task( void *arg, long period )
 #if 1
 
 	// Start the transmit to the first board.
-	set_debug( 1, 0 );
-//	set_debug( 0, 1 );
-	set_debug( 0, 0 );
-
-	// Send data to all boards
 	for (i = 0; i < num_boards; i++)
 	{
 		// get pins from user
 		set_output( i );
 
-		set_debug( 0, 0 );
 		enqueue_board_write_data( i );
 
 		// Reset receive data flags
@@ -868,7 +832,6 @@ static void serial_port_task( void *arg, long period )
 	// Fill in minimum tx data with 0's
 	for (i = num_boards; i < *(mstat->min_tx_boards); i++)
 	{
-		set_debug( 0, 0 );
 		enqueue_write_data(empty_frame, FRAME_SIZE );
 	}
 #else
