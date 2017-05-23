@@ -218,7 +218,7 @@ int hm2_pktuart_setup(char *name, int bitrate, s32 tx_mode, s32 rx_mode, int txc
       Bits 20..16      Frames received
       Bits 15..8       InterFrame delay in bit times
       Bit  7           Receive Logic active, not an error
-      Bit  6           RXMask
+      Bit  6           Unused
       Bit  5           Unused
       Bit  4           RCFIFO Error
       Bit  3           RXEnable (must be set to receive packets) 
@@ -227,9 +227,7 @@ int hm2_pktuart_setup(char *name, int bitrate, s32 tx_mode, s32 rx_mode, int txc
       Bit  0           False Start bit error (sticky)
     */
     if (rx_mode >= 0) {
-        // read filter settings from rx register before setting new values
-        r += hm2->llio->read(hm2->llio, inst->rx_mode_addr, &buff, sizeof(u32));
-        buff = (((u32)rx_mode) & 0xffff) | (buff & (0xFF << 22));
+        buff = ((u32)rx_mode) & 0x3fc0ffff; // =0011 1111 1100 0000 1111 1111 1111 1111
         r += hm2->llio->write(hm2->llio, inst->rx_mode_addr, &buff, sizeof(u32));
     }
 
