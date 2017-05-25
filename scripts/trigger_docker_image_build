@@ -1,0 +1,16 @@
+#!/bin/bash -e
+
+# trigger the build of the Machinekit CI docker image on Bitbucket
+
+curl -X POST -is -u $BB_AUTH_STRING \
+  -H 'Content-Type: application/json' \
+ https://api.bitbucket.org/2.0/repositories/pmcstone/machinekit-ci-linux-x64-docker/pipelines/ \
+  -d '
+  {
+    "target": {
+      "ref_type": "branch",
+      "type": "pipeline_ref_target",
+      "ref_name": "master"
+    }
+  }'
+

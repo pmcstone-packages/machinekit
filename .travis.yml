@@ -51,6 +51,7 @@ env:
     - MK_PACKAGE_VERBOSE=${MK_PACKAGE_VERBOSE:-false}
     - JOBS=${JOBS:-2}
     - PACKAGECLOUD_MAX_OLD_PACKAGES=${PACKAGECLOUD_MAX_OLD_PACKAGES:0}
+    - MK_DEBUG_TESTS=true
   matrix:
     - TAG=amd64    CMD=test
     - TAG=amd64    CMD=deb
@@ -78,6 +79,7 @@ script:
 after_success:
   # Upload packages to packagecloud.io; on amd64-deb, prune old
   - scripts/build_packagecloud_upload
+  - scripts/trigger_docker_image_build
   - test "$TAG-$CMD" != "amd64-deb" || packagecloud-prune -f machinekit
   # Show ccache stats
   - ccache -s
