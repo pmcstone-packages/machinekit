@@ -716,11 +716,13 @@ static void set_output( int board )
         bit = bit<<1;
     }
 
+#if 0
     // If error, reset outputs
     if ( *mstat->permanent_error )
     {
         boards[board].output_bits = 0;
     }
+#endif
 
     // Build protocol bytes
     boards[board].output_data[ 0 ] = (boards[board].address << 3);
