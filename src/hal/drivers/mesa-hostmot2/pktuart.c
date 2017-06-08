@@ -255,7 +255,7 @@ int hm2_pktuart_send(char *name,  unsigned char data[], u8 *num_frames, u16 fram
     u32 buff;
     int r, c;
     int inst;
-    
+
     inst = hm2_get_pktuart(&hm2, name);
     if (inst < 0){
         HM2_ERR_NO_LL("Can not find PktUART instance %s.\n", name);
@@ -268,12 +268,12 @@ int hm2_pktuart_send(char *name,  unsigned char data[], u8 *num_frames, u16 fram
 
     c = 0;
     u16 count = 0;
-    /* 
+    /*
        we work with nframes as a local copy of num_frames,
        so that we can return the num_frames sent out
        in case of SCFIFO error.
      */
-    u8 nframes = *num_frames; 
+    u8 nframes = *num_frames;
 
     /* http://freeby.mesanet.com/regmap
        Send counts are written to 16 deep FIFO allowing up to 16 packets to be 
@@ -285,14 +285,14 @@ int hm2_pktuart_send(char *name,  unsigned char data[], u8 *num_frames, u16 fram
     } else{
         nframes = *num_frames;
     }
-    
+
     *num_frames = 0;
 
     u8 i;
-    for (i = 0; i < nframes; i++){
+    for (i = 0; i < nframes; i++) {
         count = count + frame_sizes[i];
         while (c < count - 3){
-               buff = (data[c] + 
+               buff = (data[c] +
                       (data[c+1] << 8) +
                       (data[c+2] << 16) +
                       (data[c+3] << 24));
@@ -303,67 +303,67 @@ int hm2_pktuart_send(char *name,  unsigned char data[], u8 *num_frames, u16 fram
                    return -1;
                   }
               c = c + 4;
-    }
+        }
 
 
-    // Now write the last bytes with bytes number < 4
-    switch(count - c){
-             case 0: 
-                  break;
-             case 1:
-                  buff = data[c];  
-                  r = hm2->llio->write(hm2->llio, hm2->pktuart.instance[inst].tx_addr,
+        // Now write the last bytes with bytes number < 4
+        switch(count - c) {
+        case 0:
+            break;
+        case 1:
+            buff = data[c];
+            r = hm2->llio->write(hm2->llio, hm2->pktuart.instance[inst].tx_addr,
                                  &buff, sizeof(u32));
-                  if (r < 0){
-                     HM2_ERR("%s send: hm2->llio->write failure\n", name);
-                     return -1;
-                  }
-                  break;
-             case 2:
-                 buff = (data[c] + 
-                        (data[c+1] << 8));
-                 r = hm2->llio->write(hm2->llio, hm2->pktuart.instance[inst].tx_addr,
+            if (r < 0){
+                HM2_ERR("%s send: hm2->llio->write failure\n", name);
+                return -1;
+            }
+            break;
+        case 2:
+            buff = (data[c] +
+                    (data[c+1] << 8));
+            r = hm2->llio->write(hm2->llio, hm2->pktuart.instance[inst].tx_addr,
                                  &buff, sizeof(u32));
-                 if (r < 0){
-                     HM2_ERR("%s send: hm2->llio->write failure\n", name);
-                     return -1;
-                 }
-                 break;
-             case 3:
-                 buff = (data[c] + 
-                       (data[c+1] << 8) +
-                       (data[c+2] << 16));
-                 r = hm2->llio->write(hm2->llio, hm2->pktuart.instance[inst].tx_addr,
+            if (r < 0){
+                HM2_ERR("%s send: hm2->llio->write failure\n", name);
+                return -1;
+            }
+            break;
+        case 3:
+            buff = (data[c] +
+                    (data[c+1] << 8) +
+                    (data[c+2] << 16));
+            r = hm2->llio->write(hm2->llio, hm2->pktuart.instance[inst].tx_addr,
                                  &buff, sizeof(u32));
-                 if (r < 0){
-                     HM2_ERR("%s send: hm2->llio->write failure\n", name);
-                     return -1;
-                 }
-                 break;
-          default:
-               HM2_ERR("%s send error in buffer parsing: count = %i, i = %i\n", name, count, c);
-               return -1;
-    } // end switch 
+            if (r < 0){
+                HM2_ERR("%s send: hm2->llio->write failure\n", name);
+                return -1;
+            }
+            break;
+        default:
+            HM2_ERR("%s send error in buffer parsing: count = %i, i = %i\n", name, count, c);
+            return -1;
+        } // end switch
 
-    // Write the number of bytes to be sent to PktUARTx sendcount register
-    buff = (u32) frame_sizes[i];
-    r = hm2->llio->write(hm2->llio, hm2->pktuart.instance[inst].tx_fifo_count_addr,
-                                 &buff, sizeof(u32));
-    // Check for Send Count FIFO error
-    r = hm2->llio->read(hm2->llio, hm2->pktuart.instance[inst].tx_mode_addr,
-                                 &buff, sizeof(u32));
-    if ((buff >> 4) & 0x01) {
-        HM2_ERR_NO_LL("%s: SCFFIFO error\n", name);
-        return -TxSCFIFOError;
-    }
+        // Write the number of bytes to be sent to PktUARTx sendcount register
+        buff = (u32) frame_sizes[i];
+        r = hm2->llio->write(hm2->llio, hm2->pktuart.instance[inst].tx_fifo_count_addr,
+                             &buff, sizeof(u32));
+        // Check for Send Count FIFO error
+        r = hm2->llio->read(hm2->llio, hm2->pktuart.instance[inst].tx_mode_addr,
+                            &buff, sizeof(u32));
+        if ((buff >> 4) & 0x01) {
+            HM2_ERR_NO_LL("%s: SCFFIFO error\n", name);
+            return -TxSCFIFOError;
+        }
 
-    if (r < 0){
-        HM2_ERR("%s send: hm2->llio->write failure\n", name);
-        return -1;
-    }
+        if (r < 0) {
+            HM2_ERR("%s send: hm2->llio->write failure\n", name);
+            return -1;
+        }
 
-    (*num_frames)++;
-    c = count;
+        (*num_frames)++;
+        c = count;
     } // for loop
 
     return count;
