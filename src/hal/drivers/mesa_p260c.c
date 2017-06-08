@@ -453,9 +453,10 @@ static int openserial(char *devicename, int baud)
     u32 rx_filter_reg = calculate_filter_reg(baud);
     // tx_inter_frame_delay = time between cmd send and response -> smaller than two bit times 640us -> use 1 bit time
     // controls how long the enable pin stays enabled in PktUART
-    u32 tx_inter_frame_delay = 1u; //226u; // 226 bit = 76us
-    u32 rx_inter_frame_delay = 10u; // 113 bit = 38us
-    u32 tx_data = (tx_inter_frame_delay << 8) | DRIVE_ENABLE_AUTO;
+    u32 tx_inter_frame_delay = 1u; // 226 bit = 76us
+    u32 rx_inter_frame_delay = 113u; // 113 bit = 38us
+    u8  tx_drive_enable_delay = 0u; // 15 clock low periods = 10ns
+    u32 tx_data = (tx_inter_frame_delay << 8) | DRIVE_ENABLE_AUTO | (tx_drive_enable_delay & 0xF);
     u32 rx_data = (rx_filter_reg << 22) | (rx_inter_frame_delay << 8) | RX_ENABLE | RX_MASK_ENABLE;
 
     rtapi_print_msg(RTAPI_MSG_INFO, "%s: TX inter-frame delay: %u, RX inter-frame delay: %u, RX FilterReg: %u\n",
