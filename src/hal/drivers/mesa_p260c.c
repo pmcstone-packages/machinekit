@@ -451,9 +451,9 @@ static int openserial(char *devicename, int baud)
     rtapi_print_msg(RTAPI_MSG_INFO, "%s: Set up PktUART now\n", modname);
 
     u32 rx_filter_reg = calculate_filter_reg(baud);
-    u32 tx_inter_frame_delay = 226u; // 226 bit = 76us
+    u32 tx_inter_frame_delay = 1u; // 226 bit = 76us
     u32 rx_inter_frame_delay = 113u; // 113 bit = 38us
-    u8  tx_drive_enable_delay = 1u; // 15 clock low periods = 10ns
+    u8  tx_drive_enable_delay = 0u; // 15 clock low periods = 10ns
     u32 tx_data = (tx_inter_frame_delay << 8) | DRIVE_ENABLE_AUTO | (tx_drive_enable_delay & 0xF);
     u32 rx_data = (rx_filter_reg << 22) | (rx_inter_frame_delay << 8) | RX_ENABLE | RX_MASK_ENABLE;
 
