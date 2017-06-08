@@ -355,7 +355,7 @@ void init_module_status()
 {
     *(mstat->set_perm_count) = 5;
     *(mstat->clear_comm_count) = 10;
-    *(mstat->min_tx_boards) = 6;
+    *(mstat->min_tx_boards) = 1;
     *(mstat->max_rx_wait) = 5000000;
 }
 
