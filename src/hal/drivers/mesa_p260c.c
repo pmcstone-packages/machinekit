@@ -451,8 +451,10 @@ static int openserial(char *devicename, int baud)
     rtapi_print_msg(RTAPI_MSG_INFO, "%s: Set up PktUART now\n", modname);
 
     u32 rx_filter_reg = calculate_filter_reg(baud);
-    u32 tx_inter_frame_delay = 226u; // 226 bit = 76us
-    u32 rx_inter_frame_delay = 113u; // 113 bit = 38us
+    // tx_inter_frame_delay = time between cmd send and response -> smaller than two bit times 640us -> use 1 bit time
+    // controls how long the enable pin stays enabled in PktUART
+    u32 tx_inter_frame_delay = 1u; //226u; // 226 bit = 76us
+    u32 rx_inter_frame_delay = 10u; // 113 bit = 38us
     u32 tx_data = (tx_inter_frame_delay << 8) | DRIVE_ENABLE_AUTO;
     u32 rx_data = (rx_filter_reg << 22) | (rx_inter_frame_delay << 8) | RX_ENABLE | RX_MASK_ENABLE;
 
@@ -816,7 +818,6 @@ static void serial_port_task( void *arg, long period )
 	*mstat->writecnt += 1;
 
 #if 1
-
 	// Start the transmit to the first board.
 	for (i = 0; i < num_boards; i++)
 	{
