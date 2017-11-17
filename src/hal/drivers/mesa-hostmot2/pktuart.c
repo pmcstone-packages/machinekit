@@ -218,7 +218,7 @@ int hm2_pktuart_setup(char *name, int bitrate, s32 tx_mode, s32 rx_mode, int txc
       Bits 20..16      Frames received
       Bits 15..8       InterFrame delay in bit times
       Bit  7           Receive Logic active, not an error
-      Bit  6           RXMask
+      Bit  6           Unused
       Bit  5           Unused
       Bit  4           RCFIFO Error
       Bit  3           RXEnable (must be set to receive packets) 
