@@ -277,40 +277,40 @@ int export_pins()
 		hal_pin_s32_newf(HAL_IN, &(boards[i].read2), comp_id, "%s.%d.serial_read2", modname, add );
 		hal_pin_s32_newf(HAL_IN, &(boards[i].read3), comp_id, "%s.%d.serial_read3", modname, add );
 		hal_pin_s32_newf(HAL_IN, &(boards[i].maxreadtime), comp_id, "%s.%d.serial_maxreadtime", modname, add );
-#endif                                       
+#endif
 	}
 	retval = hal_pin_s32_newf(HAL_IN, &(mstat->maxreadtime), comp_id, "%s.sys_max_read", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin maxreadtime could not export pin, err: %d\n", modname, retval);
 		return -1;
 	}
 	retval = hal_pin_s32_newf(HAL_IN, &(mstat->maxwritetime), comp_id, "%s.sys_max_write", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin maxwritetime could not export pin, err: %d\n", modname, retval);
 		return -1;
 	}
 	retval = hal_pin_s32_newf(HAL_IN, &(mstat->writecnt), comp_id, "%s.sys_writecnt", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin writecnt could not export pin, err: %d\n", modname, retval);
 		return -1;
 	}
 	retval = hal_pin_bit_newf(HAL_OUT, &(mstat->comm_error), comp_id, "%s.rx_comm_error", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin comm_error could not export pin, err: %d\n", modname, retval);
 		return -1;
 	}
 	retval = hal_pin_bit_newf(HAL_OUT, &(mstat->permanent_error), comp_id, "%s.rx_perm_error", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin permanent_error could not export pin, err: %d\n", modname, retval);
 		return -1;
 	}
 	retval = hal_pin_bit_newf(HAL_IN, &(mstat->reset_permanent), comp_id, "%s.rx_reset_error", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin reset_permanent could not export pin, err: %d\n", modname, retval);
 		return -1;
@@ -318,31 +318,31 @@ int export_pins()
 
 	// Parameters
 	retval = hal_pin_s32_newf(HAL_IO, &(mstat->clear_comm_count), comp_id, "%s.clear_comm_count", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: param clear_comm_count could not create, err: %d\n", modname, retval);
 		return -1;
 	}
 	retval = hal_pin_s32_newf(HAL_IO, &(mstat->set_perm_count), comp_id, "%s.set_perm_count", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: param set_perm_count could not create, err: %d\n", modname, retval);
 		return -1;
 	}
 	retval = hal_pin_s32_newf(HAL_IO, &(mstat->min_tx_boards), comp_id, "%s.minimum_tx", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: param minimum_tx could not create, err: %d\n", modname, retval);
 		return -1;
 	}
 	retval = hal_pin_s32_newf(HAL_IO, &(mstat->max_rx_wait), comp_id, "%s.max_rx_wait", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: param minimum_tx could not create, err: %d\n", modname, retval);
 		return -1;
 	}
 	retval = hal_pin_bit_newf(HAL_IO, &(mstat->debug_on_error), comp_id, "%s.debug_on_error", modname );
-	if(retval < 0) 
+	if(retval < 0)
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: param debug_on_error could not create, err: %d\n", modname, retval);
 		return -1;
@@ -382,7 +382,7 @@ int export_functions()
     return 0;
 }
 
-int rtapi_app_main(void) 
+int rtapi_app_main(void)
 {
 	if (init_hal_module() != 0) {
         goto error;
@@ -393,11 +393,11 @@ int rtapi_app_main(void)
     if (allocate_status_structure() != 0) {
         goto error;
     }
-    
+
     if (parse_parameters() != 0) {
         goto error;
     }
-    
+
     if (open_and_configure_serial_port() != 0) {
         goto error;
     }
@@ -555,7 +555,7 @@ static u8 validate_input_buffer( u8 *input_data, u16 *bits )
 //
 // Count RX valids.
 //   gets called once per cycle for each board.
-// 
+//
 static int read_counts( int board )
 {
 	int ret = 0;
@@ -691,7 +691,7 @@ static void read_all_data()
 	for (i = 0; i < num_boards; i++)
     {
 		valid += read_counts(i);
-	}        
+	}
 }
 
 // get HAL pins and set data
