@@ -44,7 +44,9 @@ INCLUDES += hal/drivers
 	cp  $^ $@
 
 # build instructions for the hal_p260c module
-obj-m += hal_p260c.o mesa_p260c.o
+# FIXME FTBFS 2017-12-08; disabling mesa_p260c; see 354d30d john@zultron.com
+#obj-m += hal_p260c.o mesa_p260c.o
+obj-m += hal_p260c.o
 # the list of parts
 hal_p260c-objs := hal/drivers/hal_p260c.o $(MATHSTUB)
 mesa_p260c-objs := hal/drivers/mesa_p260c.o $(MATHSTUB)
