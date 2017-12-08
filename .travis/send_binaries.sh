@@ -2,6 +2,11 @@
 
 FILE="${TRAVIS_REPO_SLUG//\//.}_${TRAVIS_BRANCH}_${TRAVIS_JOB_NUMBER}.tgz"
 
+if [ -z "${SFTP_ADDR}" ]; then
+    echo "No SFTP_ADDR value defined; skipping sftp upload" >&2
+    exit 0
+fi
+
 if [ "${CMD}" = "run_tests" ]; then
     exit 0
 fi
