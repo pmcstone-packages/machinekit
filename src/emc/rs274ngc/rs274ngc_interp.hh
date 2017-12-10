@@ -143,6 +143,7 @@ public:
     // int assign_named_param(const char *nameBuf, int attr = 0, double value = 0.0);
     remap_pointer remapping(const char *code);
     remap_pointer remapping(const char letter, int number = -1);
+ int find_tool_index(setup_pointer settings, int toolno, int *index);
  int find_tool_pocket(setup_pointer settings, int toolno, int *pocket);
 
     // private:

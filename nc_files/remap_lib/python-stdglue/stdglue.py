@@ -90,7 +90,7 @@ def setfeed_epilog(self,**words):
 
 
 # REMAP=T   prolog=prepare_prolog ngc=prepare epilog=prepare_epilog
-# exposed parameters: #<tool> #<pocket>
+# exposed parameters: #<tool> #<pocket> #<index>
 
 def prepare_prolog(self,**words):
     try:
@@ -104,9 +104,15 @@ def prepare_prolog(self,**words):
             if status != INTERP_OK:
                 self.set_errormsg("T%d: pocket not found" % (tool))
                 return status
+            (status, index) = self.find_tool_index(tool)
+            if status != INTERP_OK:
+                self.set_errormsg("T%d: index not found" % (tool))
+                return status
         else:
             pocket = -1 # this is a T0 - tool unload
+            index = -1
         self.params["tool"] = tool
+        self.params["index"] = index
         self.params["pocket"] = pocket
         return INTERP_OK
     except Exception, e:
@@ -127,7 +133,8 @@ def prepare_epilog(self, **words):
             if self.return_value > 0:
                 self.selected_tool = int(self.params["tool"])
                 self.selected_pocket = int(self.params["pocket"])
-                emccanon.SELECT_POCKET(self.selected_pocket, self.selected_tool)
+                self.selected_index = int(self.params["index"])
+                emccanon.SELECT_POCKET(self.selected_index, self.selected_tool)
                 return INTERP_OK
             else:
                 self.set_errormsg("T%d: aborted (return code %.1f)" % (int(self.params["tool"]),self.return_value))
@@ -142,6 +149,8 @@ def prepare_epilog(self, **words):
 #    #<selected_tool>
 #    #<current_pocket>
 #    #<selected_pocket>
+#    #<current_index>
+#    #<selected_index>
 
 def change_prolog(self, **words):
     try:
@@ -160,8 +169,10 @@ def change_prolog(self, **words):
             return INTERP_ERROR
 	self.params["tool_in_spindle"] = self.current_tool
 	self.params["selected_tool"] = self.selected_tool
-	self.params["current_pocket"] = self.current_pocket # this is probably nonsense
+	self.params["current_pocket"] = self.current_pocket
+        self.params["current_index"] = self.current_index
         self.params["selected_pocket"] = self.selected_pocket
+        self.params["selected_index"] = self.selected_index
         return INTERP_OK
     except Exception, e:
         self.set_errormsg("M6/change_prolog: %s" % (e))
@@ -188,9 +199,12 @@ def change_epilog(self, **words):
             if self.return_value > 0.0:
                 # commit change
                 self.selected_pocket =  int(self.params["selected_pocket"])
-                emccanon.CHANGE_TOOL(self.selected_pocket)
+                self.selected_index =  int(self.params["selected_index"])
+                emccanon.CHANGE_TOOL(self.selected_index)
                 self.current_pocket = self.selected_pocket
+                self.current_index = self.selected_index
                 self.selected_pocket = -1
+                self.selected_index = -1
                 self.selected_tool = -1
                 # cause a sync()
                 self.set_tool_parameters()
@@ -204,7 +218,7 @@ def change_epilog(self, **words):
         yield INTERP_ERROR
 
 # REMAP=M61  modalgroup=6 prolog=settool_prolog ngc=settool epilog=settool_epilog
-# exposed parameters: #<tool> #<pocket>
+# exposed parameters: #<tool> #<pocket> #<index>
 
 def settool_prolog(self,**words):
     try:
@@ -220,7 +234,12 @@ def settool_prolog(self,**words):
         if status != INTERP_OK:
             self.set_errormsg("M61 failed: requested tool %d not in table" % (tool))
             return status
+        (status,index) = self.find_tool_index(tool)
+        if status != INTERP_OK:
+            self.set_errormsg("M61 failed: requested tool %d not in table" % (tool))
+            return status
         self.params["tool"] = tool
+        self.params["index"] = index
         self.params["pocket"] = pocket
         return INTERP_OK
     except Exception,e:
@@ -242,7 +261,8 @@ def settool_epilog(self,**words):
             if self.return_value > 0.0:
                 self.current_tool = int(self.params["tool"])
                 self.current_pocket = int(self.params["pocket"])
-                emccanon.CHANGE_TOOL_NUMBER(self.current_pocket)
+                self.current_index = int(self.params["index"])
+                emccanon.CHANGE_TOOL_NUMBER(self.current_index)
                 # cause a sync()
                 self.tool_change_flag = True
                 self.set_tool_parameters()
@@ -265,15 +285,20 @@ def set_tool_number(self, **words):
             toolno = int(c.q_number)
         else:
             self.set_errormsg("M61 requires a Q parameter")
+            return status
+	(status, pocket) = self.find_tool_pocket(toolno)
+	if status != INTERP_OK:
+            self.set_errormsg("M61 failed: requested tool %d not in table" % (toolno))
             return status 
-	(status,pocket) = self.find_tool_pocket(toolno)
+	(status, index) = self.find_tool_index(toolno)
 	if status != INTERP_OK:
             self.set_errormsg("M61 failed: requested tool %d not in table" % (toolno))
             return status
 	if words['q'] > -TOLERANCE_EQUAL: # 'greater equal 0 within interp's precision'
             self.current_pocket = pocket
+            self.current_index = index
             self.current_tool = toolno
-            emccanon.CHANGE_TOOL_NUMBER(pocket)
+            emccanon.CHANGE_TOOL_NUMBER(index)
             # cause a sync()
             self.tool_change_flag = True
             self.set_tool_parameters()
