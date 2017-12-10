@@ -653,6 +653,7 @@ typedef struct setup_struct
   char blocktext[LINELEN];   // linetext downcased, white space gone
   CANON_MOTION_MODE control_mode;       // exact path or cutting mode
   int current_pocket;             // carousel slot number of current tool
+  int current_index;             // tool table index of current tool
   double current_x;             // current X-axis position
   double current_y;             // current Y-axis position
   double current_z;             // current Z-axis position
@@ -710,6 +711,7 @@ typedef struct setup_struct
   RETRACT_MODE retract_mode;    // for cycles, old_z or r_plane
   int random_toolchanger;       // tool changer swaps pockets, and pocket 0 is the spindle instead of "no tool"
   int selected_pocket;          // tool slot selected but not active
+  int selected_index;           // tool index selected but not active
     int selected_tool;          // start switchover to pocket-agnostic interp
   int sequence_number;          // sequence number of line last read
   double speed;                 // current spindle speed in rpm or SxM

@@ -34,6 +34,7 @@ setup_struct::setup_struct() :
     remap_level(0),
     control_mode(0),
     current_pocket(0),
+    current_index(0),
 
     current_x (0.0),
     current_y (0.0),
@@ -87,6 +88,7 @@ setup_struct::setup_struct() :
     retract_mode(R_PLANE),
     random_toolchanger(0),
     selected_pocket(0),
+    selected_index(0),
     selected_tool(0),
     sequence_number(0),
     speed (0.0),

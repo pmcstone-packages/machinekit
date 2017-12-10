@@ -50,6 +50,7 @@ static bool scan_old_style(
 	} else {
 	    /* lathe tool */
 	    toolTable[pocket].toolno = toolno;
+        toolTable[pocket].pocket = (fms ? fms[fakepocket] : pocket);
 	    toolTable[pocket].offset.tran.z = zoffset;
 	    toolTable[pocket].offset.tran.x = xoffset;
 	    toolTable[pocket].diameter = diameter;
@@ -78,6 +79,7 @@ static bool scan_old_style(
 	} else {
 	    /* mill tool */
 	    toolTable[pocket].toolno = toolno;
+	    toolTable[pocket].pocket = (fms ? fms[fakepocket] : pocket);
 	    toolTable[pocket].offset.tran.z = zoffset;
 	    toolTable[pocket].diameter = diameter;
 
@@ -115,6 +117,7 @@ int loadToolTable(const char *filename,
     // clear out tool table
     for (t = random_toolchanger? 0: 1; t < CANON_POCKETS_MAX; t++) {
         toolTable[t].toolno = -1;
+        toolTable[t].pocket = -1;
         ZERO_EMC_POSE(toolTable[t].offset);
         toolTable[t].diameter = 0.0;
         toolTable[t].frontangle = 0.0;
@@ -249,6 +252,7 @@ int loadToolTable(const char *filename,
         }
         if (valid) {
             toolTable[pocket].toolno = toolno;
+            toolTable[pocket].pocket = (fms ? fms[fakepocket] : pocket);
             toolTable[pocket].offset = offset;
             toolTable[pocket].diameter = diameter;
             toolTable[pocket].frontangle = frontangle;
