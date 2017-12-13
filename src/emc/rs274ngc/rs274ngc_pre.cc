@@ -1287,6 +1287,7 @@ int Interp::load_tool_table()
   }
   for (; n < CANON_POCKETS_MAX; n++) {
     _setup.tool_table[n].toolno = -1;
+    _setup.tool_table[n].pocket = -1;
     ZERO_EMC_POSE(_setup.tool_table[n].offset);
     _setup.tool_table[n].diameter = 0;
     _setup.tool_table[n].orientation = 0;
@@ -2429,6 +2430,7 @@ int Interp::init_tool_parameters()
     _setup.parameters[5411] = _setup.tool_table[0].frontangle;
     _setup.parameters[5412] = _setup.tool_table[0].backangle;
     _setup.parameters[5413] = _setup.tool_table[0].orientation;
+    _setup.parameters[5414] = _setup.tool_table[0].pocket;
   } else {
     // non random_toolchanger: no tool at startup, one-time init
     if (_setup.tool_table[0].toolno == -1) {
@@ -2454,6 +2456,7 @@ int Interp::default_tool_parameters()
   _setup.parameters[5411] =  0; // frontangle
   _setup.parameters[5412] =  0; // backangle
   _setup.parameters[5413] =  0; // orientation
+  _setup.parameters[5414] =  0; // pocket
   return 0;
 }
 
@@ -2480,6 +2483,7 @@ int Interp::set_tool_parameters()
   _setup.parameters[5411] = _setup.tool_table[0].frontangle;
   _setup.parameters[5412] = _setup.tool_table[0].backangle;
   _setup.parameters[5413] = _setup.tool_table[0].orientation;
+  _setup.parameters[5414] = _setup.tool_table[0].pocket;
 
   return 0;
 }

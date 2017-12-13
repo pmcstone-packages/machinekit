@@ -3843,13 +3843,17 @@ int Interp::convert_setup_tool(block_pointer block, setup_pointer settings) {
     if (settings->random_toolchanger)
         if (settings->tool_table[0].toolno >= 0) {
             settings->parameters[5400] = settings->tool_table[0].toolno;
+            settings->parameters[5414] = settings->tool_table[0].pocket;
         } else {
             settings->parameters[5400] = -1;
+            settings->parameters[5414] = -1;
     } else {
         if (settings->tool_table[0].toolno > 0) {
             settings->parameters[5400] = settings->tool_table[0].toolno;
+            settings->parameters[5414] = settings->tool_table[0].pocket;
         } else {
             settings->parameters[5400] = 0;
+            settings->parameters[5414] = 0;
         }
     }
 
