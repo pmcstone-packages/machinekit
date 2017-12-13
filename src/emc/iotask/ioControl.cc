@@ -77,7 +77,6 @@ static EMC_IO_STAT emcioStatus;
 static NML *emcErrorBuffer = 0;
 
 static char *ttcomments[CANON_POCKETS_MAX];
-static int fms[CANON_POCKETS_MAX];
 static int random_toolchanger = 0;
 
 
@@ -294,7 +293,7 @@ static int saveToolTable(const char *filename,
     }
     for (pocket = start_pocket; pocket < CANON_POCKETS_MAX; pocket++) {
         if (toolTable[pocket].toolno != -1) {
-            fprintf(fp, "T%d P%d", toolTable[pocket].toolno, random_toolchanger? pocket: fms[pocket]);
+            fprintf(fp, "T%d P%d", toolTable[pocket].toolno, toolTable[pocket].pocket);
             if (toolTable[pocket].diameter) fprintf(fp, " D%f", toolTable[pocket].diameter);
             if (toolTable[pocket].offset.tran.x) fprintf(fp, " X%+f", toolTable[pocket].offset.tran.x);
             if (toolTable[pocket].offset.tran.y) fprintf(fp, " Y%+f", toolTable[pocket].offset.tran.y);
@@ -607,7 +606,8 @@ void load_tool(int pocket) {
     } else if(pocket == 0) {
         // on non-random tool-changers, asking for pocket 0 is the secret
         // handshake for "unload the tool from the spindle"
-    emcioStatus.tool.toolTable[0].toolno = -1;
+        emcioStatus.tool.toolTable[0].toolno = -1;
+        emcioStatus.tool.toolTable[0].pocket = -1;
         ZERO_EMC_POSE(emcioStatus.tool.toolTable[0].offset);
         emcioStatus.tool.toolTable[0].diameter = 0.0;
         emcioStatus.tool.toolTable[0].frontangle = 0.0;
@@ -753,19 +753,19 @@ int main(int argc, char *argv[])
 
     // on nonrandom machines, always start by assuming the spindle is empty
     if(!random_toolchanger) {
-    emcioStatus.tool.toolTable[0].toolno = -1;
+        emcioStatus.tool.toolTable[0].toolno = -1;
+        emcioStatus.tool.toolTable[0].pocket = -1;
         ZERO_EMC_POSE(emcioStatus.tool.toolTable[0].offset);
-    emcioStatus.tool.toolTable[0].diameter = 0.0;
+        emcioStatus.tool.toolTable[0].diameter = 0.0;
         emcioStatus.tool.toolTable[0].frontangle = 0.0;
         emcioStatus.tool.toolTable[0].backangle = 0.0;
         emcioStatus.tool.toolTable[0].orientation = 0;
-        fms[0] = 0;
         ttcomments[0][0] = '\0';
     }
 
     if (0 != loadToolTable(tool_table_file, emcioStatus.tool.toolTable,
-        fms, ttcomments, random_toolchanger)) {
-    rcs_print_error("can't load tool table.\n");
+        ttcomments, random_toolchanger)) {
+        rcs_print_error("can't load tool table.\n");
     }
 
     done = 0;
@@ -833,7 +833,7 @@ int main(int argc, char *argv[])
     case EMC_TOOL_INIT_TYPE:
         rtapi_print_msg(RTAPI_MSG_DBG, "EMC_TOOL_INIT\n");
         loadToolTable(tool_table_file, emcioStatus.tool.toolTable,
-            fms, ttcomments, random_toolchanger);
+            ttcomments, random_toolchanger);
         reload_tool_number(emcioStatus.tool.toolInSpindle);
         break;
 
@@ -864,7 +864,7 @@ int main(int argc, char *argv[])
 
                 /* set tool number first */
                 *(iocontrol_data->tool_prep_index) = p;
-                *(iocontrol_data->tool_prep_pocket) = random_toolchanger? p: fms[p];
+                *(iocontrol_data->tool_prep_pocket) = emcioStatus.tool.toolTable[p].toolno;
                 if(!random_toolchanger && p == 0) {
                     *(iocontrol_data->tool_prep_number) = 0;
                 } else {
@@ -920,7 +920,7 @@ int main(int argc, char *argv[])
         if(!strlen(filename)) filename = tool_table_file;
         rtapi_print_msg(RTAPI_MSG_DBG, "EMC_TOOL_LOAD_TOOL_TABLE\n");
         if (0 != loadToolTable(filename, emcioStatus.tool.toolTable,
-                  fms, ttcomments, random_toolchanger))
+                  ttcomments, random_toolchanger))
             emcioStatus.status = RCS_ERROR;
         else
             reload_tool_number(emcioStatus.tool.toolInSpindle);
@@ -947,6 +947,7 @@ int main(int argc, char *argv[])
                                 p, t, offs.tran.z, offs.tran.x, d, f, b, o);
 
                 emcioStatus.tool.toolTable[p].toolno = t;
+                emcioStatus.tool.toolTable[p].pocket = p;
                 emcioStatus.tool.toolTable[p].offset = offs;
                 emcioStatus.tool.toolTable[p].diameter = d;
                 emcioStatus.tool.toolTable[p].frontangle = f;
