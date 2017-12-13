@@ -102,7 +102,7 @@ static bp::object wrap_find_tool_pocket(Interp &interp, int toolno)
     int status, pocket;
     setup *settings  =  &interp._setup;
 
-    status = interp.find_tool_index(settings, toolno, &pocket);
+    status = interp.find_tool_pocket(settings, toolno, &pocket);
     return bp::make_tuple(status, pocket);
 }
 
