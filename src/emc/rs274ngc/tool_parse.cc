@@ -21,84 +21,84 @@
 #include "tool_parse.h"
 
 static bool scan_old_style(
-	char *buffer,
-	CANON_TOOL_TABLE toolTable[],
-	int fms[],
-	char *ttcomments[],
-	int random_toolchanger,
-	int &fakepocket) {
+    char *buffer,
+    CANON_TOOL_TABLE toolTable[],
+    int fms[],
+    char *ttcomments[],
+    int random_toolchanger,
+    int &fakepocket) {
     int scanned, toolno, pocket, orientation;
     double zoffset, xoffset, diameter, frontangle, backangle;
     char comment[CANON_TOOL_COMMENT_LEN];
 
     if((scanned = sscanf(buffer, "%d %d %lf %lf %lf %lf %lf %d %[^\n]",
-			 &toolno, &pocket, &zoffset, &xoffset, &diameter,
-			 &frontangle, &backangle, &orientation, comment)) &&
+             &toolno, &pocket, &zoffset, &xoffset, &diameter,
+             &frontangle, &backangle, &orientation, comment)) &&
        (scanned == 8 || scanned == 9)) {
-	if(!random_toolchanger) {
-	    fakepocket++;
-	    if(fakepocket >= CANON_POCKETS_MAX) {
-		printf("too many tools. skipping tool %d\n", toolno);
-		return true;
-	    }
-	    if(fms) fms[fakepocket] = pocket;
-	    pocket = fakepocket;
-	}
-	if (pocket < 0 || pocket >= CANON_POCKETS_MAX) {
-	    printf("max pocket number is %d. skipping tool %d\n", CANON_POCKETS_MAX-1, toolno);
-	    return true;
-	} else {
-	    /* lathe tool */
-	    toolTable[pocket].toolno = toolno;
+    if(!random_toolchanger) {
+        fakepocket++;
+        if(fakepocket >= CANON_POCKETS_MAX) {
+        printf("too many tools. skipping tool %d\n", toolno);
+        return true;
+        }
+        if(fms) fms[fakepocket] = pocket;
+        pocket = fakepocket;
+    }
+    if (pocket < 0 || pocket >= CANON_POCKETS_MAX) {
+        printf("max pocket number is %d. skipping tool %d\n", CANON_POCKETS_MAX-1, toolno);
+        return true;
+    } else {
+        /* lathe tool */
+        toolTable[pocket].toolno = toolno;
         toolTable[pocket].pocket = (fms ? fms[fakepocket] : pocket);
-	    toolTable[pocket].offset.tran.z = zoffset;
-	    toolTable[pocket].offset.tran.x = xoffset;
-	    toolTable[pocket].diameter = diameter;
+        toolTable[pocket].offset.tran.z = zoffset;
+        toolTable[pocket].offset.tran.x = xoffset;
+        toolTable[pocket].diameter = diameter;
 
-	    toolTable[pocket].frontangle = frontangle;
-	    toolTable[pocket].backangle = backangle;
-	    toolTable[pocket].orientation = orientation;
-	    if(ttcomments && scanned == 9) strcpy(ttcomments[pocket], comment);
-	    return true;
-	}
+        toolTable[pocket].frontangle = frontangle;
+        toolTable[pocket].backangle = backangle;
+        toolTable[pocket].orientation = orientation;
+        if(ttcomments && scanned == 9) strcpy(ttcomments[pocket], comment);
+        return true;
+    }
     } else if ((scanned = sscanf(buffer, "%d %d %lf %lf %[^\n]",
-				 &toolno, &pocket, &zoffset, &diameter, comment)) &&
-	       (scanned == 4 || scanned == 5)) {
-	if(!random_toolchanger) {
-	    fakepocket++;
-	    if(fakepocket >= CANON_POCKETS_MAX) {
-		printf("too many tools. skipping tool %d\n", toolno);
-		return true;
-	    }
-	    if(fms) fms[fakepocket] = pocket;
-	    pocket = fakepocket;
-	}
-	if (pocket < 0 || pocket >= CANON_POCKETS_MAX) {
-	    printf("max pocket number is %d. skipping tool %d\n", CANON_POCKETS_MAX-1, toolno);
-	    return true;
-	} else {
-	    /* mill tool */
-	    toolTable[pocket].toolno = toolno;
-	    toolTable[pocket].pocket = (fms ? fms[fakepocket] : pocket);
-	    toolTable[pocket].offset.tran.z = zoffset;
-	    toolTable[pocket].diameter = diameter;
+                 &toolno, &pocket, &zoffset, &diameter, comment)) &&
+           (scanned == 4 || scanned == 5)) {
+    if(!random_toolchanger) {
+        fakepocket++;
+        if(fakepocket >= CANON_POCKETS_MAX) {
+        printf("too many tools. skipping tool %d\n", toolno);
+        return true;
+        }
+        if(fms) fms[fakepocket] = pocket;
+        pocket = fakepocket;
+    }
+    if (pocket < 0 || pocket >= CANON_POCKETS_MAX) {
+        printf("max pocket number is %d. skipping tool %d\n", CANON_POCKETS_MAX-1, toolno);
+        return true;
+    } else {
+        /* mill tool */
+        toolTable[pocket].toolno = toolno;
+        toolTable[pocket].pocket = (fms ? fms[fakepocket] : pocket);
+        toolTable[pocket].offset.tran.z = zoffset;
+        toolTable[pocket].diameter = diameter;
 
-	    // these aren't used on a mill
-	    toolTable[pocket].frontangle = toolTable[pocket].backangle = 0.0;
-	    toolTable[pocket].offset.tran.x = 0.0;
-	    toolTable[pocket].orientation = 0;
-	    if(ttcomments && scanned == 5) strcpy(ttcomments[pocket], comment);
-	    return true;
-	}
+        // these aren't used on a mill
+        toolTable[pocket].frontangle = toolTable[pocket].backangle = 0.0;
+        toolTable[pocket].offset.tran.x = 0.0;
+        toolTable[pocket].orientation = 0;
+        if(ttcomments && scanned == 5) strcpy(ttcomments[pocket], comment);
+        return true;
+    }
     }
     return false;
 }
 
 int loadToolTable(const char *filename,
-			 CANON_TOOL_TABLE toolTable[],
-			 int fms[],
-			 char *ttcomments[],
-			 int random_toolchanger)
+             CANON_TOOL_TABLE toolTable[],
+             int fms[],
+             char *ttcomments[],
+             int random_toolchanger)
 {
     int fakepocket = 0;
     int t;
@@ -111,8 +111,8 @@ int loadToolTable(const char *filename,
 
     // open tool table file
     if (NULL == (fp = fopen(filename, "r"))) {
-	// can't open file
-	return -1;
+    // can't open file
+    return -1;
     }
     // clear out tool table
     for (t = random_toolchanger? 0: 1; t < CANON_POCKETS_MAX; t++) {
