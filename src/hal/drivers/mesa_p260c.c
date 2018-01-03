@@ -607,7 +607,7 @@ static int read_counts( int board )
         {
             *(boards[board].comm_error) = 1;
         }
-        // Go into permenant error
+        // Go into permanent error
         if ( boards[board].permanent_error != NULL )
         {
             *(boards[board].permanent_error) = 1;
