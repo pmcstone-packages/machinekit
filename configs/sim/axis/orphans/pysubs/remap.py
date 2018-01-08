@@ -21,16 +21,21 @@ def prepare_prolog(self, userdata,**words):
 	self.params[5599] = 1  # turn on DEBUG, output
 	self._tool = int(words['t'])
 	if self._tool:
+		(status,self._index) = self.find_tool_index(self._tool)
+		if status != INTERP_OK:
+			self.set_errormsg("T%d: index not found" % (self._tool))
+			return status
 		(status,self._pocket) = self.find_tool_pocket(self._tool)
 		if status != INTERP_OK:
 			self.set_errormsg("T%d: pocket not found" % (self._tool))
 			return status
 	else:
-		self._pocket = -1 # this is an T0 - tool unload
+		self._index = -1 # this is an T0 - tool unload
 
 	# these variables will be visible in the ngc oword sub
-	# as #<tool> and #<pocket> as local variables
+	# as #<tool>, #<index> and #<pocket> as local variables
 	self.params["tool"] = self._tool
+	self.params["index"] = self._index
 	self.params["pocket"] = self._pocket
 	return INTERP_OK
 
@@ -51,8 +56,9 @@ def prepare_epilog(self, userdata, **words):
 	retval = self.return_value
 	if retval >= 0:
 		self.selected_pocket = self._pocket
+		self.selected_index = self._index
 		self.selected_tool = self._tool
-		emccanon.SELECT_POCKET( self._pocket, self._tool)
+		emccanon.SELECT_POCKET( self._index, self._tool)
 		return INTERP_OK
 	else:
 		self.set_errormsg("T%d: aborted (return code %.4f)" % (self._tool,retval))
@@ -66,7 +72,7 @@ def prepare_epilog(self, userdata, **words):
 # REMAP=M6   modalgroup=6  argspec=-     prolog=change_prolog ngc=change epilog=change_epilog
 #
 def change_prolog(self, userdata,**words):
-	if self.selected_pocket < 0:
+	if self.selected_index < 0:
 		self.set_errormsg("Need tool prepared -Txx- for toolchange")
 		return INTERP_ERROR
 	if self.cutter_comp_side:
@@ -74,23 +80,25 @@ def change_prolog(self, userdata,**words):
 		return INTERP_ERROR
 
 	# bug in interp_convert.cc: WONT WORK - isnt valid anymore
-	## 	    settings->selected_pocket);
+	## 	    settings->selected_index);
 	## 	    settings->tool_table[0].toolno, <--- BROKEN
 	## 	    block->t_number,
 	#self.params["prepared" ] = 2
 
 	self.params["tool_in_spindle"] = self.current_tool
+	self.params["selected_index"] = self.selected_index
 	self.params["selected_pocket"] = self.selected_pocket
 	return INTERP_OK
 
 def change_epilog(self, userdata,**words):
 	retval = self.return_value
-	print "change_epilog retval=% selected_pocket=%d" %(retval,self.selected_pocket)
+	print "change_epilog retval=% selected_index%d selected_pocket=%d" %(retval, self.selected_index, self.selected_pocket)
 	if retval > 0:
 		# commit change
-		#emccanon.CHANGE_TOOL(self.selected_pocket)
+		#emccanon.CHANGE_TOOL(self.selected_index)
 		emccanon.CHANGE_TOOL(self.selected_tool)
 		self.current_pocket = self.selected_pocket
+		self.current_index = self.selected_index
 		# cause a sync()
 		self.tool_change_flag = True
 		self.set_tool_parameters()
@@ -117,15 +125,20 @@ def change_epilog(self, userdata,**words):
 #
 def set_tool_number(self, userdata,**words):
 	toolno = int(words['q'])
-	(status,pocket) = self.find_tool_pocket(toolno)
+	(status, index) = self.find_tool_index(toolno)
+	if status != INTERP_OK:
+		self.set_errormsg("M61 failed: requested tool %d not in table" % (toolno))
+		return status
+	(status, pocket) = self.find_tool_pocket(toolno)
 	if status != INTERP_OK:
 		self.set_errormsg("M61 failed: requested tool %d not in table" % (toolno))
 		return status
 	if words['q'] > -TOLERANCE_EQUAL:
+		self.current_index = index
 		self.current_pocket = pocket
 
-		emccanon.CHANGE_TOOL_NUMBER(pocket)
-		# test: self.tool_table[0].offset.tran.z = self.tool_table[pocket].offset.tran.z
+		emccanon.CHANGE_TOOL_NUMBER(index)
+		# test: self.tool_table[0].offset.tran.z = self.tool_table[index].offset.tran.z
 		# cause a sync()
 		self.tool_change_flag = True
 		self.set_tool_parameters()
@@ -206,6 +219,7 @@ def introspect(args,**kwargs):
 	r = self.remap_level
 	print "call_level=",self.call_level, "remap_level=",self.remap_level
 	print "selected_pocket=",self.selected_pocket
+	print "selected_index=",self.selected_index
 	print "blocks[r].comment=",self.blocks[r].comment
 	print "blocks[r].seq=",self.blocks[r].line_number
 	print "blocks[r].p_flag=",self.blocks[r].p_flag

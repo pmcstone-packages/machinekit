@@ -150,25 +150,25 @@ int init_hal_module()
 
 int allocate_board_structures()
 {
-    boards = hal_malloc( MAX_BOARDS * sizeof( board_t ) );
-    if ( boards == NULL )
+    boards = hal_malloc(MAX_BOARDS * sizeof(board_t));
+    if (boards == NULL)
     {
         rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: hal_malloc() failed\n", modname);
         return -1;
     }
-    memset( boards, 0, MAX_BOARDS * sizeof( board_t ) );
+    memset( boards, 0, MAX_BOARDS * sizeof(board_t) );
     return 0;
 }
 
 int allocate_status_structure()
 {
-    mstat = hal_malloc( sizeof( mod_status_t ) );
-    if ( mstat == NULL )
+    mstat = hal_malloc(sizeof(mod_status_t));
+    if (mstat == NULL)
     {
         rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: hal_malloc() failed\n", modname);
         return -1;
     }
-    memset( mstat, 0, sizeof( mod_status_t ) );
+    memset(mstat, 0, sizeof(mod_status_t));
     return 0;
 }
 
@@ -183,14 +183,14 @@ int parse_parameters()
         return -1;
     }
 
-    if ( addrs != NULL )
+    if (addrs != NULL)
     {
         data = addrs;
         while((token = strtok(data, ",")) != NULL)
         {
             int add = strtol(token, NULL, 16);
 
-            if ( add < 0 || add > 15 )
+            if (add < 0 || add > 15)
             {
                 rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: address %s = %x is not valid. Only 0-F\n", modname, token, add );
                 return -1;
@@ -310,7 +310,7 @@ int export_pins()
         rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin permanent_error could not export pin, err: %d\n", modname, retval);
         return -1;
     }
-    retval = hal_pin_bit_newf(HAL_IN, &(mstat->reset_permanent), comp_id, "%s.rx_reset_error", modname );
+    retval = hal_pin_bit_newf(HAL_IO, &(mstat->reset_permanent), comp_id, "%s.rx_reset_error", modname );
     if(retval < 0)
     {
         rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin reset_permanent could not export pin, err: %d\n", modname, retval);
@@ -525,7 +525,7 @@ static unsigned char nibble_xsum( unsigned char *data )
     int i;
 
     xsum = 0;
-    for ( i=0; i<4; i++ )
+    for (i = 0; i < 4; i++)
     {
         xsum = xsum ^ (data[i]>>4);
         xsum = xsum ^ (data[i] & 0xf );
@@ -607,7 +607,7 @@ static int read_counts( int board )
         {
             *(boards[board].comm_error) = 1;
         }
-        // Go into permenant error
+        // Go into permanent error
         if ( boards[board].permanent_error != NULL )
         {
             *(boards[board].permanent_error) = 1;
@@ -668,7 +668,7 @@ static void read_all_data()
                 }
             }
             // Check for no boards...
-            if ( j == num_boards)
+            if (j == num_boards)
             {
                 // error, valid data for a board we don't have.
             }
@@ -679,11 +679,11 @@ static void read_all_data()
 
 #if DEBUG_RX
     // Count all bytes in the first board
-    if ( boards[0].readbytes != NULL )
+    if (boards[0].readbytes != NULL)
     {
         *(boards[0].readbytes) += data_pos;
     }
-    if ( boards[0].readcount != NULL )
+    if (boards[0].readcount != NULL)
     {
         *(boards[0].readcount) += data_pos;
     }
@@ -705,7 +705,7 @@ static void set_output( int board )
     bit = 1;
     for (i = 0; i < OUTPUT_PINS; i++)
     {
-        if ( *(boards[board].output_pins[i]) )
+        if (*(boards[board].output_pins[i]))
         {
             boards[board].output_bits |= bit;
         }
@@ -714,16 +714,14 @@ static void set_output( int board )
             boards[board].output_bits &= ~bit;
         }
 
-        bit = bit<<1;
+        bit = bit << 1;
     }
 
-#if 0
     // If error, reset outputs
-    if ( *mstat->permanent_error )
+    if ( *(mstat->permanent_error) )
     {
         boards[board].output_bits = 0;
     }
-#endif
 
     // Build protocol bytes
     boards[board].output_data[ 0 ] = (boards[board].address << 3);
@@ -732,7 +730,7 @@ static void set_output( int board )
     boards[board].output_data[ 1 ] = (boards[board].output_bits >> 8) & 0xFF;
     boards[board].output_data[ 2 ] = boards[board].output_bits & 0xFF;
     boards[board].output_data[ 3 ] = 0x3;
-    boards[board].output_data[ 3 ] |= ( nibble_xsum( boards[board].output_data ) << 4 );
+    boards[board].output_data[ 3 ] |= (nibble_xsum( boards[board].output_data ) << 4);
 }
 
 static void set_input( int board )
@@ -765,14 +763,14 @@ static void handle_errors( void )
 {
     int i, err;
     // Handle error reset
-    if ( *mstat->reset_permanent )
+    if ( *(mstat->reset_permanent) )
     {
-        *mstat->reset_permanent = 0;
+        *(mstat->reset_permanent) = 0;
 
-        if ( ! *mstat->comm_error )
+        if ( ! *(mstat->comm_error) )
         {
-            *mstat->permanent_error = 0;
-            for ( i=0;i<num_boards;i++)
+            *(mstat->permanent_error) = 0;
+            for (i = 0; i < num_boards; i++)
             {
                 *(boards[i].permanent_error) = 0;
             }
@@ -787,10 +785,10 @@ static void handle_errors( void )
             err = 1;
         }
     }
-    *mstat->comm_error = err;
+    *(mstat->comm_error) = err;
     if ( err )
     {
-        *mstat->permanent_error = 1;
+        *(mstat->permanent_error) = 1;
     }
 }
 
@@ -804,20 +802,20 @@ static void serial_port_task( void *arg, long period )
     t0 = rtapi_get_time();
 
     // Update max time between thread calls.
-    if ( threadtime && *(mstat->maxwritetime) < (t0-threadtime) )
+    if ( threadtime && *(mstat->maxwritetime) < (t0 - threadtime) )
     {
-        *(mstat->maxwritetime) = (t0-threadtime);
+        *(mstat->maxwritetime) = (t0 - threadtime);
     }
 
     // Check to be sure we are at the 10msec time < 9.5msec wait for the next tick.
-    if ( (t0-threadtime) < 9500000 )
+    if ( (t0 - threadtime) < 9500000 )
     {
         return;
     }
     threadtime = t0;
 #endif
 
-    *mstat->writecnt += 1;
+    *(mstat->writecnt) += 1;
 
 #if 1
 
@@ -825,9 +823,9 @@ static void serial_port_task( void *arg, long period )
     for (i = 0; i < num_boards; i++)
     {
         // get pins from user
-        set_output( i );
+        set_output(i);
 
-        enqueue_board_write_data( i );
+        enqueue_board_write_data(i);
 
         // Reset receive data flags
         boards[i].input_valid = false;
@@ -836,7 +834,7 @@ static void serial_port_task( void *arg, long period )
     // Fill in minimum tx data with 0's
     for (i = num_boards; i < *(mstat->min_tx_boards); i++)
     {
-        enqueue_write_data(empty_frame, FRAME_SIZE );
+        enqueue_write_data(empty_frame, FRAME_SIZE);
     }
 #else
     u8 out_data[4];
@@ -855,7 +853,7 @@ static void serial_port_task( void *arg, long period )
     // Set pins to user
     for (i = 0; i < num_boards; i++)
     {
-        set_input( i );
+        set_input(i);
     }
 
 #if TAKE_TIME

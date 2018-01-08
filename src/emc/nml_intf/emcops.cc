@@ -206,6 +206,7 @@ EMC_TOOL_STAT EMC_TOOL_STAT::operator =(EMC_TOOL_STAT s)
 
     for (t = 0; t < CANON_POCKETS_MAX; t++) {
 	toolTable[t].toolno = s.toolTable[t].toolno;
+	toolTable[t].pocket = s.toolTable[t].pocket;
 	toolTable[t].offset = s.toolTable[t].offset;
 	toolTable[t].diameter = s.toolTable[t].diameter;
 	toolTable[t].frontangle = s.toolTable[t].frontangle;

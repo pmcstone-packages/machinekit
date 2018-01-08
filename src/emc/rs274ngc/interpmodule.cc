@@ -88,6 +88,15 @@ static bp::object errorStack(Interp &interp)
     return msgs;
 }
 
+static bp::object wrap_find_tool_index(Interp &interp, int toolno)
+{
+    int status, index;
+    setup *settings  =  &interp._setup;
+
+    status = interp.find_tool_index(settings, toolno, &index);
+    return bp::make_tuple(status, index);
+}
+
 static bp::object wrap_find_tool_pocket(Interp &interp, int toolno)
 {
     int status, pocket;
@@ -96,7 +105,6 @@ static bp::object wrap_find_tool_pocket(Interp &interp, int toolno)
     status = interp.find_tool_pocket(settings, toolno, &pocket);
     return bp::make_tuple(status, pocket);
 }
-
 
 // FIXME not sure if this is really needed
 static  ParamClass param_wrapper ( Interp & inst) {
@@ -592,6 +600,12 @@ static inline int get_call_level (Interp &interp)  {
 static inline void set_call_level(Interp &interp, int value)  {
     interp._setup.call_level = value;
 }
+static inline int get_current_index (Interp &interp)  {
+    return interp._setup.current_index;
+}
+static inline void set_current_index(Interp &interp, int value)  {
+    interp._setup.current_index = value;
+}
 static inline int get_current_pocket (Interp &interp)  {
     return interp._setup.current_pocket;
 }
@@ -712,6 +726,12 @@ static inline int get_selected_pocket (Interp &interp)  {
 static inline void set_selected_pocket(Interp &interp, int value)  {
     interp._setup.selected_pocket = value;
 }
+static inline int get_selected_index (Interp &interp)  {
+    return interp._setup.selected_index;
+}
+static inline void set_selected_index(Interp &interp, int value)  {
+    interp._setup.selected_index = value;
+}
 static inline int get_selected_tool (Interp &interp)  {
     return interp._setup.selected_tool;
 }
@@ -817,6 +837,7 @@ BOOST_PYTHON_MODULE(interpreter) {
     class_< Interp, noncopyable >("Interp",no_init) 
 
 	.def("find_tool_pocket", &wrap_find_tool_pocket)
+	.def("find_tool_index", &wrap_find_tool_index)
 	.def("load_tool_table", &Interp::load_tool_table)
 	.def("set_tool_parameters", &Interp::set_tool_parameters)
 
@@ -903,6 +924,7 @@ BOOST_PYTHON_MODULE(interpreter) {
 	.add_property("c_indexer", &get_c_indexer, &set_c_indexer)
 	.add_property("call_level", &get_call_level, &set_call_level)
 	.add_property("current_pocket", &get_current_pocket, &set_current_pocket)
+	.add_property("current_index", &get_current_index, &set_current_index)
 	.add_property("cutter_comp_orientation",
 		      &get_cutter_comp_orientation, &set_cutter_comp_orientation)
 	.add_property("cutter_comp_side", &get_cutter_comp_side, &set_cutter_comp_side)
@@ -923,6 +945,7 @@ BOOST_PYTHON_MODULE(interpreter) {
 	.add_property("remap_level", &get_remap_level, &set_remap_level)
 	.add_property("retract_mode", &get_retract_mode, &set_retract_mode)
 	.add_property("selected_pocket", &get_selected_pocket, &set_selected_pocket)
+	.add_property("selected_index", &get_selected_index, &set_selected_index)
 	.add_property("selected_tool", &get_selected_tool, &set_selected_tool)
 	.add_property("sequence_number", &get_sequence_number, &set_sequence_number)
 	.add_property("speed_feed_mode", &get_speed_feed_mode, &set_speed_feed_mode)

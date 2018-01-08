@@ -73,6 +73,8 @@ enum predefined_named_parameters {
     NP_CURRENT_TOOL,
     NP_SELECTED_POCKET,
     NP_CURRENT_POCKET,
+    NP_SELECTED_INDEX,
+    NP_CURRENT_INDEX,
     NP_X,
     NP_Y,
     NP_Z,
@@ -650,7 +652,15 @@ int Interp::lookup_named_param(const char *nameBuf,
 	break;
 
     case NP_CURRENT_TOOL:
-	*value = _setup.tool_table[_setup.current_pocket].toolno;
+	*value = _setup.tool_table[_setup.current_index].toolno;
+	break;
+
+    case NP_SELECTED_INDEX:
+	*value = _setup.selected_index;
+	break;
+
+    case NP_CURRENT_INDEX:
+	*value = _setup.current_index;
 	break;
 
     case NP_SELECTED_POCKET:
@@ -859,7 +869,9 @@ int Interp::init_named_parameters()
   // tool related
   init_readonly_param("_current_tool", NP_CURRENT_TOOL, PA_USE_LOOKUP);
   init_readonly_param("_current_pocket", NP_CURRENT_POCKET, PA_USE_LOOKUP);
+  init_readonly_param("_current_index", NP_CURRENT_INDEX, PA_USE_LOOKUP);
   init_readonly_param("_selected_pocket", NP_SELECTED_POCKET, PA_USE_LOOKUP);
+  init_readonly_param("_selected_index", NP_SELECTED_INDEX, PA_USE_LOOKUP);
   init_readonly_param("_selected_tool", NP_SELECTED_TOOL, PA_USE_LOOKUP);
 
   // current position - alias to #5420-#5429

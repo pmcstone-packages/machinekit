@@ -31,6 +31,7 @@ struct CANON_TOOL_TABLE {
     double frontangle;
     double backangle;
     int orientation;
+    int pocket;
 };
 
 #endif
