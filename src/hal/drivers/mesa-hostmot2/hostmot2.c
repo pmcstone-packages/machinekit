@@ -232,7 +232,20 @@ int hm2_get_pktuart(hostmot2_t** hm2, char *name){
     return -1;
 }
 
-
+EXPORT_SYMBOL_GPL(hm2_get_mechatrolink);
+int hm2_get_mechatrolink(hostmot2_t** hm2, char *name){
+    struct list_head *ptr;
+    int i;
+    list_for_each(ptr, &hm2_list) {
+        *hm2 = list_entry(ptr, hostmot2_t, list);
+        if ((*hm2)->mechatrolink.num_instances > 0) {
+            for (i = 0; i < (*hm2)->mechatrolink.num_instances ; i++) {
+                if (!strcmp((*hm2)->mechatrolink.instance[i].name, name)) {return i;}
+            }
+        }
+    }
+    return -1;
+}
 
 
 
@@ -285,6 +298,7 @@ const char *hm2_get_general_function_name(int gtag) {
         case HM2_GTAG_UART_TX:         return "UART Transmit Channel";
         case HM2_GTAG_PKTUART_RX:      return "PktUART Receive Channel";
         case HM2_GTAG_PKTUART_TX:      return "PktUART Transmit Channel";
+        case HM2_GTAG_MECHATROLINK:    return "Mechatrolink Master";
         case HM2_GTAG_HM2DPLL:         return "Hostmot2 DPLL";
         case HM2_GTAG_NANOADC:    return "NANOADC";
         case HM2_GTAG_CAPSENSE:    return "CapSense";
@@ -360,6 +374,7 @@ static int hm2_parse_config_string(hostmot2_t *hm2, char *config_string) {
     hm2->config.num_bspis = -1;
     hm2->config.num_uarts = -1;
     hm2->config.num_pktuarts = -1;
+    hm2->config.num_mechatrolinks = -1;
     hm2->config.num_dplls = -1;
     hm2->config.num_leds = -1;
     hm2->config.enable_raw = 0;
@@ -464,7 +479,11 @@ static int hm2_parse_config_string(hostmot2_t *hm2, char *config_string) {
             token += 13;
             hm2->config.num_pktuarts = simple_strtol(token, NULL, 0);
 
-        } else if (strncmp(token, "num_leds=", 9) == 0) {
+        } else if (strncmp(token, "num_mechatrolinks=", 17) == 0) {
+            token += 17;
+            hm2->config.num_mechatrolinks = simple_strtol(token, NULL, 0);
+
+        }else if (strncmp(token, "num_leds=", 9) == 0) {
             token += 9;
             hm2->config.num_leds = simple_strtol(token, NULL, 0);
 
@@ -517,6 +536,7 @@ static int hm2_parse_config_string(hostmot2_t *hm2, char *config_string) {
     HM2_DBG("    num_bspis=%d\n", hm2->config.num_bspis);
     HM2_DBG("    num_uarts=%d\n", hm2->config.num_uarts);
     HM2_DBG("    num_pktuarts=%d\n", hm2->config.num_pktuarts);
+    HM2_DBG("    num_mechatrolinks=%d\n", hm2->config.num_mechatrolinks);
     HM2_DBG("    num_dplls=%d\n",    hm2->config.num_dplls);
     HM2_DBG("    num_leds=%d\n",    hm2->config.num_leds);
     HM2_DBG("    enable_raw=%d\n",   hm2->config.enable_raw);
@@ -985,6 +1005,10 @@ static int hm2_parse_module_descriptors(hostmot2_t *hm2) {
             case HM2_GTAG_PKTUART_TX:
                 md_accepted = hm2_pktuart_parse_md(hm2, md_index);
                 break;
+
+           case HM2_GTAG_MECHATROLINK:
+               md_accepted = hm2_mechatrolink_parse_md(hm2, md_index);
+               break;
 
             case HM2_GTAG_HM2DPLL:
                 md_accepted = hm2_dpll_parse_md(hm2, md_index);

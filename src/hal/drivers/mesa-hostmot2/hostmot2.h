@@ -184,6 +184,8 @@ char **argv_split(gfp_t gfp, const char *str, int *argcp);
 #define HM2_GTAG_BISS              (24)
 #define HM2_GTAG_FABS              (25)
 #define HM2_GTAG_HM2DPLL           (26)
+#define HM2_GTAG_SCALER_COUNTER    (29) // Not supported
+#define HM2_GTAG_MECHATROLINK      (30)
 #define HM2_GTAG_LIOPORT           (64) // Not supported
 #define HM2_GTAG_LED               (128)
 #define HM2_GTAG_NANOADC               (132)
@@ -914,6 +916,34 @@ typedef struct {
     struct rtapi_heap *heap;
 } hm2_pktuart_t;
 
+
+//
+// Mechatrolink
+//
+
+typedef struct {
+    u32 tx_addr;
+    u32 tx_fifo_count_addr;
+    u32 rx_addr;
+    u32 rx_fifo_count_addr;
+    u32 control_addr;
+    u32 user_par_reg0_addr;
+    u32 user_par_reg1_addr;
+    u32 user_par_reg2_addr;
+    u32 user_par_reg3_addr;
+    u32 user_par_reg4_addr;
+    char name[HAL_NAME_LEN+1];
+} hm2_mechatrolink_instance_t;
+
+typedef struct {
+    int version;
+    int num_instances;
+    hm2_mechatrolink_instance_t *instance;
+    u8 instances;
+    u8 num_registers;
+    struct rtapi_heap *heap;
+} hm2_mechatrolink_t;
+
 //
 // HM2DPLL
 //
@@ -1163,6 +1193,7 @@ typedef struct {
         int num_bspis;
         int num_uarts;
         int num_pktuarts;
+        int num_mechatrolinks;
         int num_dplls;
         char sserial_modes[4][8];
         int enable_raw;
@@ -1210,6 +1241,7 @@ typedef struct {
     hm2_bspi_t bspi;
     hm2_uart_t uart;
     hm2_pktuart_t pktuart;
+    hm2_mechatrolink_t mechatrolink;
     hm2_ioport_t ioport;
     hm2_watchdog_t watchdog;
     hm2_dpll_t dpll;
@@ -1263,6 +1295,7 @@ hm2_sserial_remote_t *hm2_get_sserial(hostmot2_t **hm2, char *name);
 int hm2_get_bspi(hostmot2_t **hm2, char *name);
 int hm2_get_uart(hostmot2_t **hm2, char *name);
 int hm2_get_pktuart(hostmot2_t **hm2, char *name);
+int hm2_get_mechatrolink(hostmot2_t **hm2, char *name);
 
 
 //
@@ -1469,6 +1502,15 @@ void hm2_pktuart_process_tram_read(hostmot2_t *hm2, long period);  //  ??
 int hm2_pktuart_setup(char *name, int bitrate, s32 tx_mode, s32 rx_mode, int txclear, int rxclear);
 int hm2_pktuart_send(char *name,  unsigned char data[], u8 *num_frames, u16 frame_sizes[]);
 int hm2_pktuart_read(char *name, unsigned char data[],  u8 *num_frames, u16 *max_frame_length, u16 frame_sizes[]);
+
+//
+// Mechatrolink functions
+//
+
+int  hm2_mechatrolink_parse_md(hostmot2_t *hm2, int md_index);
+void hm2_mechatrolink_print_module(hostmot2_t *hm2);
+void hm2_mechatrolink_cleanup(hostmot2_t *hm2);
+void hm2_mechatrolink_write(hostmot2_t *hm2);
 
 //
 // hm2dpll functions
