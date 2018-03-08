@@ -441,12 +441,12 @@ int hm2_pktuart_read(char *name, unsigned char data[], u8 *num_frames, u16 *max_
     int i=0;
     while ( i < countp ) {
           buff=0;
-       /* The receive count register is a FIFO that contains the byte counts 
-          of recieved packets. Since it is a FIFO it must only be read once after it 
+       /* The receive count register is a FIFO that contains the byte counts
+          of recieved packets. Since it is a FIFO it must only be read once after it
           has be determined that there are packets available to read. */
           r = hm2->llio->read(hm2->llio, hm2->pktuart.instance[inst].rx_fifo_count_addr,
                         &buff, sizeof(u32));
-                    
+
           countb = buff & 0x3ff; // PktUARTr  receive count register Bits 9..0 : bytes in receive packet
 
           if ((buff >> 14) & 0x1) {
@@ -463,7 +463,7 @@ int hm2_pktuart_read(char *name, unsigned char data[], u8 *num_frames, u16 *max_
            // is very unprobable, however we intercept this error too
           if (countb==0) {
               HM2_ERR_NO_LL("%s: packet %d has %d bytes.\n", name, countp+1, countb);
-              return -RxPacketSizeZero; 
+              return -RxPacketSizeZero;
           }
 
           if (( bytes_total+countb)> data_size) {
@@ -519,7 +519,7 @@ int hm2_pktuart_read(char *name, unsigned char data[], u8 *num_frames, u16 *max_
                      return -EINVAL;
           }
         if (r < 0) {
-            HM2_ERR("%s read: hm2->llio->write failure\n", name);
+            HM2_ERR("%s read: hm2->llio->read failure\n", name);
             return -1;
         }
 

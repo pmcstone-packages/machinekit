@@ -479,8 +479,8 @@ static int hm2_parse_config_string(hostmot2_t *hm2, char *config_string) {
             token += 13;
             hm2->config.num_pktuarts = simple_strtol(token, NULL, 0);
 
-        } else if (strncmp(token, "num_mechatrolinks=", 17) == 0) {
-            token += 17;
+        } else if (strncmp(token, "num_mechatrolinks=", 18) == 0) {
+            token += 18;
             hm2->config.num_mechatrolinks = simple_strtol(token, NULL, 0);
 
         }else if (strncmp(token, "num_leds=", 9) == 0) {

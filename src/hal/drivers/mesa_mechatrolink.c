@@ -32,6 +32,10 @@ MODULE_AUTHOR("Alexander Rössler");
 MODULE_DESCRIPTION("Driver for the mechatrolink bridge interface for the MESA card. Version 1.0");
 MODULE_LICENSE("GPL");
 
+#define MAX_MESSAGES 32u
+#define MAX_MESSAGE_SIZE 32u // can be 17 or 32
+#define MESSAGE_SIZE 17u
+
 #define CLOCK_LOW_MHZ  0.100
 
 static const char *modname = MODNAME;
@@ -48,6 +52,14 @@ typedef struct _mod_status_s {
     hal_s32_t *maxreadtime;
 } mod_status_t;
 
+typedef struct _write_buffer_s {
+    u8 data[MAX_MESSAGES][MAX_MESSAGE_SIZE];
+    u8 size[MAX_MESSAGES];
+    u8 station[MAX_MESSAGES];
+    u8 count;
+} write_buffer_t;
+
+static write_buffer_t write_buffer;
 
 mod_status_t *mstat;
 
@@ -116,7 +128,7 @@ int parse_parameters()
 
 int export_pins()
 {
-    int i, j, retval;
+    int retval;
 
     retval = hal_pin_s32_newf(HAL_IN, &(mstat->maxreadtime), comp_id, "%s.sys_max_read", modname );
     if(retval < 0)
@@ -139,11 +151,12 @@ void init_module_status()
 
 void init_write_buffer()
 {
-    /* int i; */
-    /* write_buffer.count = 0; */
-    /* for (i = 0; i < MAX_BOARDS; ++i) { */
-    /*     write_buffer.size[i] = FRAME_SIZE; */
-    /* } */
+    int i;
+    write_buffer.count = 0;
+    for (i = 0; i < MAX_MESSAGES; ++i) {
+        write_buffer.size[i] = MESSAGE_SIZE;
+        write_buffer.station[i] = 0u;
+    }
 }
 
 int export_functions()
@@ -151,10 +164,10 @@ int export_functions()
     int retval;
     char  name[HAL_NAME_LEN + 1];
 
-    rtapi_snprintf( name, sizeof(name), "%s.refresh", modname );
+    rtapi_snprintf( name, sizeof(name), "%s.communicate", modname );
     retval = hal_export_funct( name, communication_task, 0, 0, 0, comp_id);
     if(retval < 0) {
-        rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: refresh funct export failed\n", modname);
+        rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: communicate funct export failed\n", modname);
         return -1;
     }
     return 0;
@@ -205,7 +218,79 @@ void rtapi_app_exit(void)
     hal_exit(comp_id);
 }
 
+/***********************************************************************
+
+ Protocol task functions
+
+***/
+
+static int write_all_data()
+{
+    int retval;
+
+    if (write_buffer.count == 0u) {
+        return 0;
+    }
+    retval = hm2_mechatrolink_send(mechatrolink_master_name, (u8*)(write_buffer.data), &(write_buffer.count),
+                                   write_buffer.size, write_buffer.station);
+
+    if (retval < 0) {
+        rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: sending data failed\n", modname);
+    }
+    else {
+        rtapi_print_msg(RTAPI_MSG_INFO, "%s sent: bytes %d, frames %u\n", mechatrolink_master_name, retval, write_buffer.count);
+    }
+    write_buffer.count = 0u;
+
+    return retval;
+}
+
+static void enqueue_write_data(u8 *data, u8 size, u8 station)
+{
+    u16 i;
+    for (i = 0; i < size; ++i) {
+        write_buffer.data[write_buffer.count][i] = data[i];
+    }
+    write_buffer.size[write_buffer.count] = size;
+    write_buffer.station[write_buffer.count] = station;
+    write_buffer.count++;
+}
+
+
+static void read_all_data()
+{
+    u8 max_message_length = MAX_MESSAGE_SIZE;
+    u8 num_messages = MAX_MESSAGES;
+    u8 reply_data[num_messages * max_message_length];
+    u8 message_sizes[MAX_MESSAGES];
+    u8 message_stations[MAX_MESSAGES];
+    int rxbytes;
+    u16 data_pos = 0u;
+    int i;
+
+    rxbytes = hm2_mechatrolink_read(mechatrolink_master_name, reply_data, &num_messages,
+                                    &max_message_length, message_sizes, message_stations);
+    rtapi_print_msg(RTAPI_MSG_INFO, "%s receive: got %d bytes, %d messages\n", mechatrolink_master_name, rxbytes, num_messages);
+
+    for (i = 0; i < num_messages; ++i)
+    {
+        rtapi_print_msg(RTAPI_MSG_INFO, "Message %i: size %d, station %d", i, message_sizes[i], message_stations[i]);
+
+        data_pos += message_sizes[i];
+    }
+}
+
 static void communication_task( void *arg, long period )
 {
-    
+    u8 empty_frame[MESSAGE_SIZE];
+
+    for (int i = 0; i < MESSAGE_SIZE; ++i) {
+        empty_frame[i] = 0x00;
+    }
+
+    enqueue_write_data(empty_frame, MESSAGE_SIZE, 2u);
+    enqueue_write_data(empty_frame, MESSAGE_SIZE, 3u);
+
+    write_all_data();
+    read_all_data();
 }

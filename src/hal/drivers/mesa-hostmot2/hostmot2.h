@@ -920,18 +920,31 @@ typedef struct {
 //
 // Mechatrolink
 //
+typedef struct {
+    u16 mod;				/* MOD register */
+    u16 ma;                 /* My Address */
+    u16 ma_max;				/* Max. Number of Slaves */
+    u16 t_mcyc;				/* Tmcyc */
+    u16 t_cyc;				/* Tcyc */
+    u16 byte;				/* Transmit Data Size (Bytes) */
+    u16 dev;				/* Devision */
+    u16 max_rtry;			/* Max Number of Retry */
+    u16 c2m_ch;				/* Time slot */
+    u16 wdt;				/* Watch dog setting */
+} hm2_mechatronlik_user_par_t;
 
 typedef struct {
     u32 tx_addr;
+    u32 tx_fifo_station_addr;
     u32 tx_fifo_count_addr;
     u32 rx_addr;
     u32 rx_fifo_count_addr;
-    u32 control_addr;
-    u32 user_par_reg0_addr;
-    u32 user_par_reg1_addr;
-    u32 user_par_reg2_addr;
-    u32 user_par_reg3_addr;
-    u32 user_par_reg4_addr;
+    u32 mode_addr;
+    u32 user_par_reg_addr0;
+    u32 user_par_reg_addr1;
+    u32 user_par_reg_addr2;
+    u32 user_par_reg_addr3;
+    u32 user_par_reg_addr4;
     char name[HAL_NAME_LEN+1];
 } hm2_mechatrolink_instance_t;
 
@@ -1511,7 +1524,9 @@ int  hm2_mechatrolink_parse_md(hostmot2_t *hm2, int md_index);
 void hm2_mechatrolink_print_module(hostmot2_t *hm2);
 void hm2_mechatrolink_cleanup(hostmot2_t *hm2);
 void hm2_mechatrolink_write(hostmot2_t *hm2);
-
+int hm2_mechatrolink_send(char *name,  unsigned char data[], u8 *num_messages, u8 message_sizes[], u8 message_stations[]);
+int hm2_mechatrolink_read(char *name, unsigned char data[], u8 *num_messages, u8 *max_message_length, u8 message_sizes[],
+                          u8 message_stations[]);
 //
 // hm2dpll functions
 //
