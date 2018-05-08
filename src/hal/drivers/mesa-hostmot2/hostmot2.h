@@ -938,6 +938,7 @@ typedef struct {
     u32 tx_fifo_station_addr;
     u32 tx_fifo_count_addr;
     u32 rx_addr;
+    u32 rx_fifo_station_addr;
     u32 rx_fifo_count_addr;
     u32 mode_addr;
     u32 user_par_reg_addr0;

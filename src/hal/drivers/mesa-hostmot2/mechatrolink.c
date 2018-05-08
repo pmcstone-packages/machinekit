@@ -104,26 +104,29 @@ int hm2_mechatrolink_parse_md(hostmot2_t *hm2, int md_index)
             inst->rx_addr = (md->base_address
                              + 3 * md->register_stride
                              + i * md->instance_stride);
+            inst->rx_fifo_station_addr = (md->base_address
+                                          + 4 * md->register_stride
+                                          + i * md->instance_stride);
             inst->rx_fifo_count_addr = (md->base_address
-                                        + 4 * md->register_stride
+                                        + 5 * md->register_stride
                                         + i * md->instance_stride);
             inst->mode_addr = (md->base_address
-                                  + 5 * md->register_stride
-                                  + i * md->instance_stride);
+                               + 6 * md->register_stride
+                               + i * md->instance_stride);
             inst->user_par_reg_addr0 = (md->base_address
-                                        + 6 * md->register_stride
-                                        + i * md->instance_stride);
-            inst->user_par_reg_addr1 = (md->base_address
                                         + 7 * md->register_stride
                                         + i * md->instance_stride);
-            inst->user_par_reg_addr2 = (md->base_address
+            inst->user_par_reg_addr1 = (md->base_address
                                         + 8 * md->register_stride
                                         + i * md->instance_stride);
-            inst->user_par_reg_addr3 = (md->base_address
+            inst->user_par_reg_addr2 = (md->base_address
                                         + 9 * md->register_stride
                                         + i * md->instance_stride);
-            inst->user_par_reg_addr4 = (md->base_address
+            inst->user_par_reg_addr3 = (md->base_address
                                         + 10 * md->register_stride
+                                        + i * md->instance_stride);
+            inst->user_par_reg_addr4 = (md->base_address
+                                        + 11 * md->register_stride
                                         + i * md->instance_stride);
         }
         else {
@@ -352,10 +355,24 @@ int hm2_mechatrolink_read(char *name, unsigned char data[], u8 *num_messages, u8
           r = hm2->llio->read(hm2->llio, hm2->mechatrolink.instance[inst].rx_fifo_count_addr,
                               &buff, sizeof(u32));
 
-          byte_count = buff & 0x1F; // Mechatrolink  receive count register Bits 5..0 : bytes in receive packet
-          station_address = (buff >> 9) && 0x1f;
+          if (r < 0) {
+              HM2_ERR("%s read: hm2->llio->read failure\n", name);
+              return -1; // make the error message more detailed
+          }
 
-          // TODO: check error bits
+          byte_count = buff & 0xFF; // Mechatrolink  receive count register Bits 8..0 : bytes in receive packet
+
+          // TODO: check error bits 9..11 of rx_fifo_count register
+
+          r = hm2->llio->read(hm2->llio, hm2->mechatrolink.instance[inst].rx_station_addr,
+                              &buff, sizeof(u32));
+
+          if (r < 0) {
+              HM2_ERR("%s read: hm2->llio->read failure\n", name);
+              return -1; // make the error message more detailed
+          }
+
+          station_address = buff & Ox1F; // Mechatrolink RX station register 5 bits station address
 
           // a packet is completely received, but its byte count is zero
           // is very unprobable, however we intercept this error too
