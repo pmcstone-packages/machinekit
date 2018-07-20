@@ -148,6 +148,7 @@ case $CMD in
 	    flavor;
 
             # Run regression tests
+        env SYSLOG_TO_STDERR=1 ${RUN_TESTS} tests/rtapi.0
 	    ${RUN_TESTS} ${TEST_ARGS}"
 	)
 	;;
