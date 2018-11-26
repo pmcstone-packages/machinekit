@@ -58,6 +58,7 @@ typedef struct _board_s {
 	hal_s32_t *invalidcnt;                // s32 total count of invalid reads
 	hal_bit_t *comm_error;                // Currently in communication error
 	hal_bit_t *permanent_error;           // Triggered permanent error ( must be reset )
+	hal_bit_t *ready;                     // Set after first read cycle is completed
 	// Debug data
 #ifdef DEBUG_RX
 	hal_s32_t *writecnt;                  // s32 count of write calls
@@ -262,6 +263,12 @@ int export_pins()
 		if(retval < 0) 
 		{
 			rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin %d.permanent_error could not export pin, err: %d\n", modname, add, retval);
+			return -1;
+		}
+		retval = hal_pin_bit_newf(HAL_OUT, &(boards[i].ready), comp_id, "%s.%d.ready", modname, add );
+		if(retval < 0)
+		{
+			rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin %d.ready could not export pin, err: %d\n", modname, add, retval);
 			return -1;
 		}
 
@@ -742,6 +749,10 @@ static void set_input( int board )
 	if ( *mstat->permanent_error )
 	{
 		boards[board].input_bits = 0;
+		*(boards[board].ready) = 0;
+	}
+	else {
+		*(boards[board].ready) = 1;
 	}
 
 	bit = 1;
