@@ -107,6 +107,7 @@ typedef struct _mod_status_s {
 	hal_bit_t *comm_error;               // Currently some board has a communication error
 	hal_bit_t *permanent_error;          // Permanent error triggered by comm_error ( Must be reset )
 	hal_bit_t *reset_permanent;          // Input bit to reset permanent error
+	hal_bit_t *ready;                    // Set after first read cycle for all boards is completed
 
 	// Parameters
 	hal_s32_t *clear_comm_count;
@@ -321,6 +322,11 @@ int export_pins()
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin reset_permanent could not export pin, err: %d\n", modname, retval);
 		return -1;
+	}
+	retval = hal_pin_bit_newf(HAL_OUT, &(mstat->ready), comp_id, "%s.ready", modname);
+	if(retval < 0)
+	{
+		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin ready could not export pin ready: %d\n", modname, retval);
 	}
 
 	// Parameters
@@ -771,6 +777,18 @@ static void set_input( int board )
 	}
 }
 
+static void set_boards_ready( void )
+{
+	for (int i = 0; i < num_boards; i++)
+	{
+		if (*(boards[i].ready) == 0) {
+			*(mstat->ready) = 0;
+			return;
+		}
+	}
+	*(mstat->ready) = 1;
+}
+
 static void handle_errors( void )
 {
 	int i, err;
@@ -866,6 +884,7 @@ static void serial_port_task( void *arg, long period )
 	{
 		set_input( i );
 	}
+	set_boards_ready();
 
 #if TAKE_TIME
 	t1 = rtapi_get_time();
