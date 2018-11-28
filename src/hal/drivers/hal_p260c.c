@@ -57,6 +57,7 @@ typedef struct _board_s {
 	hal_s32_t *invalidcnt;                // s32 total count of invalid reads
 	hal_bit_t *comm_error;                // Currently in communication error
 	hal_bit_t *permanent_error;           // Triggered permanet error ( must be reset )
+	hal_bit_t *ready;                     // Set after first read cycle is completed
 	// Debug data
 #ifdef DEBUG_RX
 	hal_s32_t *writecnt;                  // s32 count of write calls
@@ -110,6 +111,7 @@ typedef struct _mod_status {
 	hal_bit_t *comm_error;               // Currently some board has a communication error
 	hal_bit_t *permanent_error;          // Permanent error triggered by comm_error ( Must be reset )
 	hal_bit_t *reset_permanent;          // Input bit to reset permanent error
+	hal_bit_t *ready;                    // Set after first read cycle for all boards is completed
 
 	// Parameters
 	hal_s32_t clear_comm_count;
@@ -285,6 +287,12 @@ int rtapi_app_main(void)
 			hal_exit(comp_id);
 			return -1;
 		}
+		retval = hal_pin_bit_newf(HAL_OUT, &(boards[i].ready), comp_id, "%s.%d.ready", modname, add );
+		if(retval < 0)
+		{
+			rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin %d.ready could not export pin, err: %d\n", modname, add, retval);
+			return -1;
+		}
 
 		// Debug
 #ifdef DEBUG_RX
@@ -341,6 +349,11 @@ int rtapi_app_main(void)
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin reset_permanent could not export pin, err: %d\n", modname, retval);
 		hal_exit(comp_id);
 		return -1;
+	}
+	retval = hal_pin_bit_newf(HAL_OUT, &(mstat->ready), comp_id, "%s.ready", modname);
+	if(retval < 0)
+	{
+		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin ready could not export pin ready: %d\n", modname, retval);
 	}
 
 	// Parameters
@@ -890,6 +903,10 @@ static void set_input( int board )
 	if ( *mstat->permanent_error )
 	{
 		boards[board].input_bits = 0;
+		*(boards[board].ready) = 0;
+	}
+	else {
+		*(boards[board].ready) = 1;
 	}
 
 	bit = 1;
@@ -906,6 +923,18 @@ static void set_input( int board )
 
 		bit = bit<<1;
 	}
+}
+
+static void set_boards_ready( void )
+{
+	for (int i = 0; i < num_boards; i++)
+	{
+		if (*(boards[i].ready) == 0) {
+			*(mstat->ready) = 0;
+			return;
+		}
+	}
+	*(mstat->ready) = 1;
 }
 
 static void handle_errors( void )
@@ -944,12 +973,13 @@ static void handle_errors( void )
 
 static void serial_port_task( void *arg, long period )
 {
-	unsigned long        t0, t1;
 	int                  i;
 	char dat[4];
 
 	memset( dat,0, 4);
 
+#if TAKE_TIME
+	unsigned long        t0, t1;
 	t0 = rtapi_get_time();
 
 	// Update max time between thread calls.
@@ -964,6 +994,7 @@ static void serial_port_task( void *arg, long period )
 		return;
 	}
 	threadtime = t0;
+#endif
 
 	*mstat->writecnt += 1;
 
@@ -1011,8 +1042,12 @@ static void serial_port_task( void *arg, long period )
 	{
 		set_input( i );
 	}
+	set_boards_ready();
+
+#if TAKE_TIME
 	t1 = rtapi_get_time();
 	runtime = t1 - t0;
+#endif
 
 }
 
