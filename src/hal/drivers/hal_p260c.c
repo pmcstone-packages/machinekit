@@ -114,12 +114,12 @@ typedef struct _mod_status {
 	hal_bit_t *ready;                    // Set after first read cycle for all boards is completed
 
 	// Parameters
-	hal_s32_t clear_comm_count;
-	hal_s32_t set_perm_count;
-	hal_s32_t min_tx_boards;
-	hal_s32_t max_rx_wait;
+	hal_s32_t *clear_comm_count;
+	hal_s32_t *set_perm_count;
+	hal_s32_t *min_tx_boards;
+	hal_s32_t *max_rx_wait;
 
-	hal_bit_t debug_on_error;
+	hal_bit_t *debug_on_error;
 } mod_status_t;
 
 //#define ERROR_CLEAR_TIME     10  // 10 cycles without an error to clear the comm_error
@@ -357,35 +357,35 @@ int rtapi_app_main(void)
 	}
 
 	// Parameters
-	retval = hal_param_s32_newf(HAL_RW, &(mstat->clear_comm_count), comp_id, "%s.clear_comm_count", modname );
+	retval = hal_pin_s32_newf(HAL_IO, &(mstat->clear_comm_count), comp_id, "%s.clear_comm_count", modname );
 	if(retval < 0) 
 	{
-		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: param clear_comm_count could not create, err: %d\n", modname, retval);
+		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: pin clear_comm_count could not create, err: %d\n", modname, retval);
 		hal_exit(comp_id);
 		return -1;
 	}
-	retval = hal_param_s32_newf(HAL_RW, &(mstat->set_perm_count), comp_id, "%s.set_perm_count", modname );
+	retval = hal_pin_s32_newf(HAL_IO, &(mstat->set_perm_count), comp_id, "%s.set_perm_count", modname );
 	if(retval < 0) 
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: param set_perm_count could not create, err: %d\n", modname, retval);
 		hal_exit(comp_id);
 		return -1;
 	}
-	retval = hal_param_s32_newf(HAL_RW, &(mstat->min_tx_boards), comp_id, "%s.minimum_tx", modname );
+	retval = hal_pin_s32_newf(HAL_IO, &(mstat->min_tx_boards), comp_id, "%s.minimum_tx", modname );
 	if(retval < 0) 
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: param minimum_tx could not create, err: %d\n", modname, retval);
 		hal_exit(comp_id);
 		return -1;
 	}
-	retval = hal_param_s32_newf(HAL_RW, &(mstat->max_rx_wait), comp_id, "%s.max_rx_wait", modname );
+	retval = hal_pin_s32_newf(HAL_IO, &(mstat->max_rx_wait), comp_id, "%s.max_rx_wait", modname );
 	if(retval < 0) 
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: param minimum_tx could not create, err: %d\n", modname, retval);
 		hal_exit(comp_id);
 		return -1;
 	}
-	retval = hal_param_bit_newf(HAL_RW, &(mstat->debug_on_error), comp_id, "%s.debug_on_error", modname );
+	retval = hal_pin_bit_newf(HAL_IO, &(mstat->debug_on_error), comp_id, "%s.debug_on_error", modname );
 	if(retval < 0) 
 	{
 		rtapi_print_msg(RTAPI_MSG_ERR, "%s: ERROR: param debug_on_error could not create, err: %d\n", modname, retval);
@@ -393,11 +393,11 @@ int rtapi_app_main(void)
 		return -1;
 	}
 
-	mstat->set_perm_count = 5;
-	mstat->clear_comm_count = 10;
-	mstat->min_tx_boards = 6;
-	mstat->max_rx_wait = 5000000;
-	mstat->debug_on_error = 0;
+	*(mstat->set_perm_count) = 5;
+	*(mstat->clear_comm_count) = 10;
+	*(mstat->min_tx_boards) = 6;
+	*(mstat->max_rx_wait) = 5000000;
+	*(mstat->debug_on_error) = 0;
 
 	// Debug
 	util_bb_init();
@@ -667,7 +667,7 @@ static int read_counts( int board )
 {
 	int ret = 0;
 
-	if ( mstat->debug_on_error )
+	if ( *(mstat->debug_on_error) )
 	{
 		if ( tty_debug != NULL && debug_fd != 0 )
 		{
@@ -680,10 +680,10 @@ static int read_counts( int board )
 	if ( boards[board].input_valid )
 	{
 		// Good data
-		if ( boards[board].invalid_timer >= mstat->clear_comm_count )
+		if ( boards[board].invalid_timer >= *(mstat->clear_comm_count) )
 		{
 			// Max out
-			boards[board].invalid_timer = mstat->clear_comm_count;
+			boards[board].invalid_timer = *(mstat->clear_comm_count);
 			// Clear error counter
 			boards[board].count_errors = 0;
 			// Clear comm error
@@ -702,12 +702,12 @@ static int read_counts( int board )
 	else
 	{
 		ret=1;
-		if ( mstat->debug_on_error )
+		if ( *(mstat->debug_on_error) )
 		{
 			if ( tty_debug != NULL && debug_fd == 0 )
 			{
 				debug_fd = openserial(tty_debug,B576000);
-				mstat->debug_on_error = 0;
+				*(mstat->debug_on_error) = 0;
 			}
 		}
 		set_debug( 1, 1 );
@@ -722,10 +722,10 @@ static int read_counts( int board )
 			*(boards[board].invalidcnt) = *(boards[board].invalidcnt) + 1;
 		}
 	}
-	if ( boards[board].count_errors >= mstat->set_perm_count )
+	if ( boards[board].count_errors >= *(mstat->set_perm_count) )
 	{
 		// Max out.
-		boards[board].count_errors = mstat->set_perm_count;
+		boards[board].count_errors = *(mstat->set_perm_count);
 		// Set comm error
 		if ( boards[board].comm_error != NULL )
 		{
@@ -771,7 +771,7 @@ static void read_all_data()
 	}
 #endif
 
-	while ( t1-t0 < mstat->max_rx_wait && input_idx < 255 )
+	while ( t1-t0 < *(mstat->max_rx_wait) && input_idx < 255 )
 	{
 #ifndef NO_SERIAL
 		cnt = read( sfd, &inp, 1 );
@@ -1023,7 +1023,7 @@ static void serial_port_task( void *arg, long period )
 		boards[i].input_cnt = 0;
 	}
 	// Fill in minimum tx data with 0's
-	for ( i=num_boards; i<mstat->min_tx_boards; i++)
+	for ( i=num_boards; i < *(mstat->min_tx_boards); i++)
 	{
 		set_debug( 0, 0 );
 		write( sfd, dat, 4 );
